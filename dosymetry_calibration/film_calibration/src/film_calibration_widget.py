@@ -14,7 +14,7 @@ from slicer.parameterNodeWrapper import (
     WithinRange,
 )
 
-from slicer import vtkMRMLScalarVolumeNode
+from slicer import vtkMRMLVectorVolumeNode
 
 
 from src.film_calibration_logic import film_calibrationLogic
@@ -106,7 +106,7 @@ class film_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         # Select default input nodes if nothing is selected yet to save a few clicks for the user
         if not self._parameterNode.inputVolume:
-            firstVolumeNode = slicer.mrmlScene.GetFirstNodeByClass("vtkMRMLScalarVolumeNode")
+            firstVolumeNode = slicer.mrmlScene.GetFirstNodeByClass("vtkMRMLVectorVolumeNode")
             if firstVolumeNode:
                 self._parameterNode.inputVolume = firstVolumeNode
 

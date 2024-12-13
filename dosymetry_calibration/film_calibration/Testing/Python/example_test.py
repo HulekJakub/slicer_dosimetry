@@ -1,5 +1,6 @@
 
 import slicer
+import imports
 from slicer.ScriptedLoadableModule import *
 
 
@@ -55,7 +56,7 @@ class example_testTest1(ScriptedLoadableModuleTest):
         # self.assertEqual(inputScalarRange[0], 0)
         # self.assertEqual(inputScalarRange[1], 695)
 
-        # outputVolume = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLScalarVolumeNode")
+        # outputVolume = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLVectorVolumeNode")
         # threshold = 100
 
         # # Test the module logic

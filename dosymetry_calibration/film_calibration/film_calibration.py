@@ -14,7 +14,7 @@ from slicer.parameterNodeWrapper import (
     WithinRange,
 )
 
-from slicer import vtkMRMLScalarVolumeNode
+from slicer import vtkMRMLVectorVolumeNode
 
 
 '''
@@ -37,11 +37,11 @@ class film_calibration(ScriptedLoadableModule):
 
     def __init__(self, parent):
         ScriptedLoadableModule.__init__(self, parent)
-        self.parent.title = _("film_calibration")  # TODO: make this more human readable by adding spaces
+        self.parent.title = _("Film Calibration")  # TODO: make this more human readable by adding spaces
         # TODO: set categories (folders where the module shows up in the module selector)
         self.parent.categories = [translate("qSlicerAbstractCoreModule", "Dosymetry")]
         self.parent.dependencies = []  # TODO: add here list of module names that this module requires
-        self.parent.contributors = ["John Doe (AnyWare Corp.)"]  # TODO: replace with "Firstname Lastname (Organization)"
+        self.parent.contributors = ["Jakub Hulek (AGH University of Krakow)"]  # TODO: replace with "Firstname Lastname (Organization)"
         # TODO: update with short description of the module and a link to online module documentation
         # _() function marks text as translatable to other languages
         self.parent.helpText = _("""
@@ -49,10 +49,7 @@ This is an example of scripted loadable module bundled in an extension.
 See more information in <a href="https://github.com/organization/projectname#film_calibration">module documentation</a>.
 """)
         # TODO: replace with organization, grant and thanks
-        self.parent.acknowledgementText = _("""
-This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc., Andras Lasso, PerkLab,
-and Steve Pieper, Isomics, Inc. and was partially funded by NIH grant 3P41RR013218-12S1.
-""")
+        self.parent.acknowledgementText = _("""Made by Jakub Hulek, student at AGH University of Krakow""")
 
         # Additional initialization step after application startup is complete
         slicer.app.connect("startupCompleted()", registerSampleData)

@@ -31,7 +31,7 @@
         </property>
         <property name="nodeTypes">
          <stringlist notr="true">
-          <string>vtkMRMLScalarVolumeNode</string>
+          <string>vtkMRMLVectorVolumeNode</string>
          </stringlist>
         </property>
         <property name="showChildNodeTypes">

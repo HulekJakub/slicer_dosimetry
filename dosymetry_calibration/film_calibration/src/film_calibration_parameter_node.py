@@ -6,7 +6,7 @@ from slicer.parameterNodeWrapper import (
     WithinRange,
 )
 
-from slicer import vtkMRMLScalarVolumeNode
+from slicer import  vtkMRMLVectorVolumeNode, vtkMRMLScalarVolumeNode
 #
 # film_calibrationParameterNode
 #
@@ -24,8 +24,8 @@ class film_calibrationParameterNode:
     invertedVolume - The output volume that will contain the inverted thresholded volume.
     """
 
-    inputVolume: vtkMRMLScalarVolumeNode
-    imageThreshold: Annotated[float, WithinRange(-100, 500)] = 100
+    inputVolume: vtkMRMLVectorVolumeNode
+    imageThreshold: Annotated[float, WithinRange(0, 255)] = 100
     invertThreshold: bool = False
     thresholdedVolume: vtkMRMLScalarVolumeNode
     invertedVolume: vtkMRMLScalarVolumeNode
