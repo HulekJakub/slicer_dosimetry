@@ -5,6 +5,7 @@ from slicer.i18n import tr as _
 from slicer.ScriptedLoadableModule import *
 
 from slicer import vtkMRMLVectorVolumeNode, vtkMRMLScalarVolumeNode
+from marker_detection import markers_detection
 
 import slicer.util
 from src.film_calibration_parameter_node import film_calibrationParameterNode
