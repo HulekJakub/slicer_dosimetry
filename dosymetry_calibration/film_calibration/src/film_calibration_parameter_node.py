@@ -1,31 +1,19 @@
 from typing import Annotated
 
 from slicer.ScriptedLoadableModule import *
-from slicer.parameterNodeWrapper import (
-    parameterNodeWrapper,
-    WithinRange,
-)
+from slicer.parameterNodeWrapper import parameterNodeWrapper
 
-from slicer import  vtkMRMLVectorVolumeNode, vtkMRMLScalarVolumeNode
-#
-# film_calibrationParameterNode
-#
-
+from slicer import vtkMRMLVectorVolumeNode
 
 @parameterNodeWrapper
 class film_calibrationParameterNode:
     """
-    The parameters needed by module.
+    The parameters needed by the module.
 
-    inputVolume - The volume to threshold.
-    imageThreshold - The value at which to threshold the input volume.
-    invertThreshold - If true, will invert the threshold.
-    thresholdedVolume - The output volume that will contain the thresholded volume.
-    invertedVolume - The output volume that will contain the inverted thresholded volume.
+    inputImage - The 3-channel input image where markers will be detected and placed.
+    calibrationFilePath - A .txt file containing additional marker-related data or configurations.
     """
 
-    inputVolume: vtkMRMLVectorVolumeNode
-    imageThreshold: Annotated[float, WithinRange(0, 255)] = 100
-    invertThreshold: bool = False
-    thresholdedVolume: vtkMRMLScalarVolumeNode
-    invertedVolume: vtkMRMLScalarVolumeNode
+    inputImage: vtkMRMLVectorVolumeNode  # 3-channel input image
+    calibrationFilePath: str  # Path to the .txt file
+    roiSize: float

@@ -1,11 +1,12 @@
 import logging
+from typing import Any, Dict
 
 import slicer
 from slicer.i18n import tr as _
 from slicer.ScriptedLoadableModule import *
 
 from slicer import vtkMRMLVectorVolumeNode, vtkMRMLScalarVolumeNode
-from marker_detection import markers_detection
+from src.marker_detection import markers_detection
 
 import slicer.util
 from src.film_calibration_parameter_node import film_calibrationParameterNode
@@ -24,6 +25,8 @@ except ModuleNotFoundError:
     slicer.util.pip_install("numpy")
     import numpy as np
 
+# python path
+# C:\Users\jakub\AppData\Local\slicer.org\Slicer 5.6.2\bin
 class film_calibrationLogic(ScriptedLoadableModuleLogic):
     """This class should implement all the actual
     computation done by your module.  The interface
@@ -41,62 +44,31 @@ class film_calibrationLogic(ScriptedLoadableModuleLogic):
     def getParameterNode(self):
         return film_calibrationParameterNode(super().getParameterNode())
 
-    def process(self,
-                inputVolume: vtkMRMLVectorVolumeNode,
-                outputVolume: vtkMRMLScalarVolumeNode,
-                imageThreshold: float,
-                invert: bool = False,
-                showResult: bool = True) -> None:
+    def detectStripes(self, inputImage: vtkMRMLVectorVolumeNode, calibrationFilePath: str) -> Dict[int, Dict[str, Any]]:
         """
         Run the processing algorithm.
         Can be used without GUI widget.
-        :param inputVolume: volume to be thresholded
-        :param outputVolume: thresholding result
-        :param imageThreshold: values above/below this threshold will be set to 0
-        :param invert: if True then values above the threshold will be set to 0, otherwise values below are set to 0
-        :param showResult: show output volume in slice viewers
         """
 
-        if not inputVolume or not outputVolume:
+        if not inputImage or not calibrationFilePath:
             raise ValueError("Input or output volume is invalid")
 
         import time
 
         startTime = time.time()
-        logging.info(f"Processing started {imageThreshold} {invert}")
-        img = slicer.util.arrayFromVolume(inputVolume)
-        cv2.imwrite(r'C:\Studia\Magisterka\dosymetry_slicer\opened_image.png', img)
-        thresholded_image = np.zeros((1, img.shape[1], img.shape[2], 1))
-        img_gray = cv2.cvtColor(img[0], cv2.COLOR_RGBA2GRAY)
-        logging.info(str(np.mean(img_gray)))
-        img_gray[img_gray >= imageThreshold] = 255
-        img_gray[img_gray < imageThreshold] = 0
-        if invert:
-            img_gray[img_gray >= imageThreshold] = 0
-            img_gray[img_gray < imageThreshold] = 255
-        else:
-            img_gray[img_gray >= imageThreshold] = 255
-            img_gray[img_gray < imageThreshold] = 0
-        print(img_gray[:,:,np.newaxis].shape)
-        print(thresholded_image[0].shape)
-        thresholded_image[0] = img_gray[:,:,np.newaxis]
-        slicer.util.updateVolumeFromArray(outputVolume, img_gray[np.newaxis,:,:])
-        
-        
-        
+        logging.info(f"Processing started")
+        img = slicer.util.arrayFromVolume(inputImage)
         print(img.shape)
-        # Compute the thresholded output volume using the "Threshold Scalar Volume" CLI module
-        cliParams = {
-            "InputVolume": inputVolume.GetID(),
-            "OutputVolume": outputVolume.GetID(),
-            "ThresholdValue": imageThreshold,
-            "ThresholdType": "Above" if invert else "Below",
-        }
-        # cliNode = slicer.cli.run(slicer.modules.thresholdscalarvolume, None, cliParams, wait_for_completion=True, update_display=showResult)
-        # # We don't need the CLI module node anymore, remove it to not clutter the scene with it
-        # slicer.mrmlScene.RemoveNode(cliNode)
+        img = img.reshape((img.shape[-3], img.shape[-2], img.shape[-1]))
+        print(img.shape)
+        with open(calibrationFilePath, 'r') as f:
+            calibration_lines = [line.strip() for line in f.readlines() if line.strip() != '']
+        output = markers_detection(img, calibration_lines)
 
+        print(output)
+        # slicer.util.updateVolumeFromArray(outputVolume, img_gray[np.newaxis,:,:])
+        
         stopTime = time.time()
         logging.info(f"Processing completed in {stopTime-startTime:.2f} seconds")
-
-
+        
+        return output

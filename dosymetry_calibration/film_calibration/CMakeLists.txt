@@ -4,9 +4,11 @@ set(MODULE_NAME film_calibration)
 #-----------------------------------------------------------------------------
 set(MODULE_PYTHON_SCRIPTS
   ${MODULE_NAME}.py
-  src/film_calibration_logic
-  src/film_calibration_parameter_node
-  src/film_calibration_widget
+  src/film_calibration_logic.py
+  src/film_calibration_parameter_node.py
+  src/film_calibration_widget.py
+  src/imports.py
+  src/marker_detection.py
   Testing/Python/example_test.py
 )
 
