@@ -2,6 +2,7 @@ import logging
 import os
 from typing import Annotated, Optional
 
+import slicer.util
 import vtk
 from vtk import vtkVector3d
 
@@ -16,7 +17,14 @@ from slicer.parameterNodeWrapper import (
 )
 
 from slicer import vtkMRMLVectorVolumeNode
+try:
+    import matplotlib
+except ModuleNotFoundError:
+    slicer.util.pip_install("matplotlib")
+    import matplotlib
 
+matplotlib.use("Agg")
+import qt
 
 from src.film_calibration_logic import film_calibrationLogic
 from src.film_calibration_parameter_node import film_calibrationParameterNode
@@ -134,8 +142,10 @@ class film_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self._checkCanDetectStripes()
             self._checkCanGenerateCalibration()
 
+
     def _checkCanDetectStripes(self, caller=None, event=None) -> None:
-        if self._parameterNode and self._parameterNode.inputImage is not None and self._parameterNode.calibrationFilePath is not None:
+        print(self.ui.calibrationFileSelector.currentPath)
+        if self._parameterNode and self._parameterNode.inputImage is not None:
             self.ui.detectStripesButton.toolTip = _("Detect stripes")
             self.ui.detectStripesButton.enabled = True
         else:
@@ -143,15 +153,19 @@ class film_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.ui.detectStripesButton.enabled = False
     
     def _checkCanGenerateCalibration(self, caller=None, event=None) -> None:
-        if self.stripesDetected:
+        print(self.ui.calibrationOutputSelector.currentPath)
+        if not self.stripesDetected:
+            self.ui.generateCalibrationButton.toolTip = _("First detect stripes!")
+            self.ui.generateCalibrationButton.enabled = False
+        else:
             self.ui.generateCalibrationButton.toolTip = _("Generate calibration")
             self.ui.generateCalibrationButton.enabled = True
-        else:
-            self.ui.generateCalibrationButton.toolTip = _("First detect stripes")
-            self.ui.generateCalibrationButton.enabled = False
 
     def onDetectStripesButton(self) -> None:
         """Run processing when user clicks "DetectStripes" button."""
+        if self.ui.calibrationFileSelector.currentPath == '':
+            slicer.util.errorDisplay('Did not find calibration file!')
+            return
         with slicer.util.tryWithErrorDisplay(_("Failed to compute results."), waitCursor=True):
             centers = self.logic.detectStripes(self.ui.inputImageSelector.currentNode(), self.ui.calibrationFileSelector.currentPath)
             self.centers = centers
@@ -173,17 +187,9 @@ class film_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             row, col, value = point['y'], point['x'], 0  # row and col represent image indices
             
             # Convert from image coordinates (row, col, value) to RAS coordinates
-            # Assuming the z-value is a direct translation for now
             x_ras = image_origin[0] - col * image_spacing[0]  # Convert column index to real world x
             y_ras = image_origin[1] - row * image_spacing[1]  # Convert row index to real world y
-            z_ras = image_origin[2] + value * image_spacing[2]  # Convert value index to real world z
-
-            # control_point = vtkVector3d(x_ras, y_ras, z_ras)
-            # index = markup_node.AddControlPoint(control_point)
-            # label = f"Point-{key}"  # Custom label
-            # markup_node.SetNthControlPointLabel(index, label)
-            # description = f"Value: {point['value']}"  # Custom description
-            # markup_node.SetAttribute(f"Point-{key}-description", description)
+            z_ras = image_origin[2] - value * image_spacing[2]  # Convert value index to real world z
             
             roi_node = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsROINode")
             
@@ -200,5 +206,18 @@ class film_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.roi_nodes[key] = roi_node
 
     def onGenerateCalibration(self):
-        print("calibration")
-        
+        if self.ui.calibrationFileSelector.currentPath == '':
+            slicer.util.errorDisplay('Did not find calibration file!')
+            return
+        if self.ui.calibrationOutputSelector.currentPath == '':
+            slicer.util.errorDisplay('Did not find calibration output directory!')
+            return
+        with slicer.util.tryWithErrorDisplay(_("Failed to compute results."), waitCursor=True):
+            print("calibration")
+            volume_node = self.ui.inputImageSelector.currentNode()
+            interpolation_parameters = self.logic.create_calibration(volume_node, self.roi_nodes, self.ui.calibrationFileSelector.currentPath, self.ui.calibrationOutputSelector.currentPath)
+            print(interpolation_parameters)
+                
+            plot_path = os.path.join(self.ui.calibrationOutputSelector.currentPath, 'calibration_plot.png')
+            slicer.util.loadVolume(plot_path, properties={'show': True})
+

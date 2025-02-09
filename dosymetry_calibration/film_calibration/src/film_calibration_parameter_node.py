@@ -16,4 +16,5 @@ class film_calibrationParameterNode:
 
     inputImage: vtkMRMLVectorVolumeNode  # 3-channel input image
     calibrationFilePath: str  # Path to the .txt file
+    calibrationOutputPath: str  # Path to the .txt file
     roiSize: float

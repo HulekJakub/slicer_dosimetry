@@ -19,15 +19,24 @@
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;How to use:&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;1. Load calibration image by dragging it onto the slicer window&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;1. Load calibration image (.tif) by dragging it onto the slicer window&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;2. Select it in &amp;quot;Calibartion image&amp;quot; selector&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;3. Select calibration file path&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;4. Click &amp;quot;Detect stripes&amp;quot;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;5. Check and adjust markups with &amp;quot;Markups&amp;quot; module if needed&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;6. Click &amp;quot;Generate calibration&amp;quot;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;6. Select output directory&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;7. Click &amp;quot;Generate calibration&amp;quot;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Info:&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Subsequent pushes of &amp;quot;Detect stripes&amp;quot; button will clear all previously created ROIs (only those created by this extension) and generate them again&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Subsequent pushes of &amp;quot;Detect stripes&amp;quot; button will clear all previously created ROIs (only those created by this extension) and generate them again&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Calibration file should be in  the following txt format:&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;integer_id-cGy_value&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Example:&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;0-0&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;3-297&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;6-602&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
    </item>
@@ -71,22 +80,55 @@ p, li { white-space: pre-wrap; }
       <item row="3" column="0">
        <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>Calibration file</string>
+         <string>Dosage file</string>
         </property>
        </widget>
       </item>
       <item row="3" column="1">
-       <widget class="ctkPathLineEdit" name="calibrationFileSelector"/>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>ROI size</string>
+       <widget class="ctkPathLineEdit" name="calibrationFileSelector">
+        <property name="acceptDrops">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Calibration output path</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="ctkPathLineEdit" name="calibrationOutputSelector">
+        <property name="filters">
+         <set>ctkPathLineEdit::AllDirs|ctkPathLineEdit::Dirs|ctkPathLineEdit::Drives|ctkPathLineEdit::NoDot|ctkPathLineEdit::NoDotDot|ctkPathLineEdit::Readable|ctkPathLineEdit::Writable</set>
+        </property>
+        <property name="options">
+         <set>ctkPathLineEdit::ShowDirsOnly</set>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>ROI size [mm]</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1">
        <widget class="qMRMLSliderWidget" name="roiSize">
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="pageStep">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="minimum">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
+        </property>
         <property name="value">
          <double>10.000000000000000</double>
         </property>
