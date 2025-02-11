@@ -21,23 +21,23 @@ from slicer import vtkMRMLVectorVolumeNode
     Imports for compatibility with Slicer
 '''
 # from Testing.Python.example_test import *
-from src.film_calibration_logic import *
-from src.film_calibration_parameter_node import *
-from src.film_calibration_widget import *
+from src.dosymetry_calibration_logic import *
+from src.dosymetry_calibration_parameter_node import *
+from src.dosymetry_calibration_widget import *
 
 #
-# film_calibration
+# dosymetry
 #
 
 
-class film_calibration(ScriptedLoadableModule):
+class dosymetry(ScriptedLoadableModule):
     """Uses ScriptedLoadableModule base class, available at:
     https://github.com/Slicer/Slicer/blob/main/Base/Python/slicer/ScriptedLoadableModule.py
     """
 
     def __init__(self, parent):
         ScriptedLoadableModule.__init__(self, parent)
-        self.parent.title = _("Film Calibration")  # TODO: make this more human readable by adding spaces
+        self.parent.title = _("Dosymetry")  # TODO: make this more human readable by adding spaces
         # TODO: set categories (folders where the module shows up in the module selector)
         self.parent.categories = [translate("qSlicerAbstractCoreModule", "Dosymetry")]
         self.parent.dependencies = []  # TODO: add here list of module names that this module requires
@@ -46,7 +46,7 @@ class film_calibration(ScriptedLoadableModule):
         # _() function marks text as translatable to other languages
         self.parent.helpText = _("""
 This is an example of scripted loadable module bundled in an extension.
-See more information in <a href="https://github.com/organization/projectname#film_calibration">module documentation</a>.
+See more information in <a href="https://github.com/organization/projectname#dosymetry">module documentation</a>.
 """)
         # TODO: replace with organization, grant and thanks
         self.parent.acknowledgementText = _("""Made by Jakub Hulek, student at AGH University of Krakow""")
@@ -55,9 +55,6 @@ See more information in <a href="https://github.com/organization/projectname#fil
         slicer.app.connect("startupCompleted()", registerSampleData)
 
 
-#
-# Register sample data sets in Sample Data module
-#
 
 
 def registerSampleData():
@@ -67,7 +64,7 @@ def registerSampleData():
 
     pass
 
-class film_calibrationTest(ScriptedLoadableModuleTest):
+class dosymetryTest(ScriptedLoadableModuleTest):
 
     def setUp(self):
         pass    
@@ -75,9 +72,9 @@ class film_calibrationTest(ScriptedLoadableModuleTest):
     def runTest(self):
         """Run as few or as many tests as needed here."""
         self.setUp()
-        self.test_film_calibration()
+        self.test_dosymetry()
 
-    def test_film_calibration(self):
+    def test_dosymetry(self):
         self.delayDisplay("Starting the mock test")
         self.delayDisplay("Mock test passed")
         

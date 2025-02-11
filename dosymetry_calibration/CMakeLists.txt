@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16.3...3.19.7 FATAL_ERROR)
 
-project(dosymetry_calibration)
+project(Dosymetry)
 
 #-----------------------------------------------------------------------------
 # Extension meta-information
@@ -20,6 +20,7 @@ include(${Slicer_USE_FILE})
 #-----------------------------------------------------------------------------
 # Extension modules
 add_subdirectory(film_calibration)
+add_subdirectory(dosymetry)
 ## NEXT_MODULE
 
 #-----------------------------------------------------------------------------
