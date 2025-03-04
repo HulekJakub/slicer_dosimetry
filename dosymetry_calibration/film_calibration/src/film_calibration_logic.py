@@ -89,7 +89,7 @@ class film_calibrationLogic(ScriptedLoadableModuleLogic):
             calibration_lines = [line.strip() for line in f.readlines() if line.strip() != '']
         calibration_dict = {int(el[0].strip()): int(el[1].strip()) for el in [line.split('-') for line in calibration_lines]}
 
-        roi_pixel_data = self.__extract_ras_regions(volume_node, roi_nodes)
+        roi_pixel_data = self.__extract_roi_regions(volume_node, roi_nodes)
 
         roi_nodes_data_normalized = {k: v / 2**16 for k, v in roi_pixel_data.items()}
         roi_rgb_mean_normalized = {k: {c: v[:,:,i].mean() for i, c in enumerate(['r', 'g', 'b'])} for k, v in roi_nodes_data_normalized.items()}
@@ -103,8 +103,8 @@ class film_calibrationLogic(ScriptedLoadableModuleLogic):
         
         return interpolation_parameters
 
-    def __extract_ras_regions(self, volume_node, roi_nodes):
-        """Extract regions in RAS format and convert to arrays."""
+    def __extract_roi_regions(self, volume_node, roi_nodes):
+        """Extract regions in IJK format and convert to arrays."""
         # Get image properties
         image_data = slicer.util.arrayFromVolume(volume_node)  # Get numpy array
         image_data = image_data.reshape((image_data.shape[-3], image_data.shape[-2], image_data.shape[-1]))
@@ -113,7 +113,7 @@ class film_calibrationLogic(ScriptedLoadableModuleLogic):
         origin = volume_node.GetOrigin()
 
         # Prepare result storage
-        ras_regions = {}
+        roi_regions = {}
 
         for key, roi_node in roi_nodes.items():
             # Get ROI parameters
@@ -138,9 +138,9 @@ class film_calibrationLogic(ScriptedLoadableModuleLogic):
             roi_pixels = image_data[row_min: row_max + 1, col_min: col_max + 1]
 
             # Store result
-            ras_regions[key] = roi_pixels
+            roi_regions[key] = roi_pixels
 
-        return ras_regions
+        return roi_regions
 
     def __calculate_interpolatation_parameters(self, calibration_dict, roi_rgb_mean_normalized, roi_rgb_std_normalized):
         def model_func(x, a, b, c):

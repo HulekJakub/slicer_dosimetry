@@ -9,8 +9,9 @@ from slicer.ScriptedLoadableModule import *
 from slicer import vtkMRMLVectorVolumeNode, vtkMRMLScalarVolumeNode
 
 import slicer.util
-from src.dosymetry_calibration_parameter_node import dosymetryParameterNode
-#
+from src.dosymetry_parameter_node import dosymetryParameterNode
+from src.detect_dosymetry_stripes import detect_dosymetry_stripes
+
 # dosymetryLogic
 #
 try:
@@ -67,6 +68,30 @@ class dosymetryLogic(ScriptedLoadableModuleLogic):
 
         print(calibrationFilePath)
         print(outputDirectoryPath)
+        
+        
+    def detectStripes(self, volume_node, recalibration_stripes_present):
+        """
+        Run the processing algorithm.
+        Can be used without GUI widget.
+        """
+
+        if not volume_node or recalibration_stripes_present is None:
+            raise ValueError("Input or output volume is invalid")
+
+        import time
+
+        startTime = time.time()
+        logging.info(f"Processing started")
+        img = slicer.util.arrayFromVolume(volume_node)
+        print(img.shape)
+        img = img.reshape((img.shape[-3], img.shape[-2], img.shape[-1]))
+        output = detect_dosymetry_stripes(img, recalibration_stripes_present)
+
+        stopTime = time.time()
+        logging.info(f"Processing completed in {stopTime-startTime:.2f} seconds")
+        
+        return output
         
     
     

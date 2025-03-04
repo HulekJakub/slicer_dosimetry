@@ -4,7 +4,7 @@ from slicer.ScriptedLoadableModule import *
 
 
 from dosymetry import registerSampleData
-from src.dosymetry_calibration_logic import dosymetryLogic
+from dosymetry_calibration.dosymetry.src.dosymetry_logic import dosymetryLogic
 
 
 #

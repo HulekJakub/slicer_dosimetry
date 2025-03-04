@@ -1,3 +1,4 @@
+from src.imports import *
 import logging
 import os
 from typing import Annotated, Optional
@@ -21,9 +22,9 @@ from slicer import vtkMRMLVectorVolumeNode
     Imports for compatibility with Slicer
 '''
 # from Testing.Python.example_test import *
-from src.dosymetry_calibration_logic import *
-from src.dosymetry_calibration_parameter_node import *
-from src.dosymetry_calibration_widget import *
+from src.dosymetry_logic import *
+from src.dosymetry_parameter_node import *
+from src.dosymetry_widget import *
 
 #
 # dosymetry

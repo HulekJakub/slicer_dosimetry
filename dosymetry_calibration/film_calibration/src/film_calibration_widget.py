@@ -97,6 +97,7 @@ class film_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self._parameterNode.disconnectGui(self._parameterNodeGuiTag)
             self._parameterNodeGuiTag = None
             self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanDetectStripes)
+            self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanGenerateCalibration)
 
     def onSceneStartClose(self, caller, event) -> None:
         """Called just before the scene is closed."""
@@ -183,26 +184,11 @@ class film_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             slicer.mrmlScene.RemoveNode(node)
         self.roi_nodes = {}
         
+        size = self.ui.roiSize.value # Size in mm
         for key, point in centers.items():
-            row, col, value = point['y'], point['x'], 0  # row and col represent image indices
+            x_ras, y_ras, z_ras = self.__point2d_to_ras([point['x'], point['y']], image_origin, image_spacing)
             
-            # Convert from image coordinates (row, col, value) to RAS coordinates
-            x_ras = image_origin[0] - col * image_spacing[0]  # Convert column index to real world x
-            y_ras = image_origin[1] - row * image_spacing[1]  # Convert row index to real world y
-            z_ras = image_origin[2] - value * image_spacing[2]  # Convert value index to real world z
-            
-            roi_node = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsROINode")
-            
-
-            roi_node.SetXYZ(x_ras, y_ras, z_ras)  # Set center in RAS
-            size = self.ui.roiSize.value # Size in mm
-            roi_node.SetSize(size, size, size)
-
-            roi_node.SetName(f"{key}")
-
-            roi_node.SetAttribute(f"value", f"{point['value']}")
-            roi_node.SetAttribute(f"x", f"{point['x']}")
-            roi_node.SetAttribute(f"y", f"{point['y']}")
+            roi_node = self.__create_roi_node(x_ras, y_ras, z_ras, size, key)
             self.roi_nodes[key] = roi_node
 
     def onGenerateCalibration(self):
@@ -224,4 +210,23 @@ class film_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.roi_nodes = {}
             slicer.util.loadVolume(plot_path, properties={'show': True})
 
+        
+    def __point2d_to_ras(self, point, image_origin, image_spacing):
+        row, col = point[1], point[0]  # row and col represent image indices
+        value = 0
+        # Convert from image coordinates (row, col, value) to RAS coordinates
+        x_ras = image_origin[0] - col * image_spacing[0]  # Convert column index to real world x
+        y_ras = image_origin[1] - row * image_spacing[1]  # Convert row index to real world y
+        z_ras = image_origin[2] - value * image_spacing[2]  # Convert value index to real world z
+        
+        return x_ras, y_ras, z_ras
 
+    def __create_roi_node(self, x_ras, y_ras, z_ras, size, name):
+        roi_node = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsROINode")
+
+        roi_node.SetXYZ(x_ras, y_ras, z_ras)  # Set center in RAS
+        roi_node.SetSize(size, size, size)
+
+        roi_node.SetName(f"{name}")
+        return roi_node
+    
