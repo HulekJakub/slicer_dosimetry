@@ -30,6 +30,8 @@ import qt
 from src.dosymetry_logic import dosymetryLogic
 from src.dosymetry_parameter_node import dosymetryParameterNode
 from src.dosymetry_settings_widget import DosimetrySettingsWidget
+from src.utils import isFloat, point2dToRas
+import SimpleITK as sitk
 
 #
 # dosymetryWidget
@@ -67,11 +69,7 @@ class dosymetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # "setMRMLScene(vtkMRMLScene*)" slot.
         uiWidget.setMRMLScene(slicer.mrmlScene)
 
-        # Create logic class. Logic implements all computations that should be possible to run
-        # in batch mode, without a graphical user interface.
         self.logic = dosymetryLogic()
-
-        # Connections
 
         # These connections ensure that we update parameter node when scene is closed
         self.addObserver(slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose)
@@ -114,12 +112,10 @@ class dosymetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     def onSceneStartClose(self, caller, event) -> None:
         """Called just before the scene is closed."""
-        # Parameter node will be reset, do not use it anymore
         self.setParameterNode(None)
 
     def onSceneEndClose(self, caller, event) -> None:
         """Called just after the scene is closed."""
-        # If this module is shown while the scene is closed then recreate a new parameter node immediately
         if self.parent.isEntered:
             self.initializeParameterNode()
 
@@ -167,41 +163,92 @@ class dosymetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         else:
             self.ui.detectStripesButton.toolTip = _("Select input volume")
             self.ui.detectStripesButton.enabled = False
-
-    def onRunButton(self) -> None:
+            
+    def __onRunButtonCheck(self):
+        errors = []
         if self.ui.calibrationFileSelector.currentPath == '':
-            slicer.util.errorDisplay('Did not set calibration file!')
+            errors.append('Did not set calibration file!')
             return
         if self.ui.outputSelector.currentPath == '':
-            slicer.util.errorDisplay('Did not set output directory!')
+            errors.append('Did not set output directory!')
             return
+        if 'sample' not in self.roi_nodes:
+            errors.append('Sample was not detected!')
+            return
+        if 'control' in self.roi_nodes and self.ui.controlStripeDose.text == '':
+            errors.append('Did not set control stripe dose!')
+            return
+        if 'control' in self.roi_nodes and not isFloat(self.ui.controlStripeDose.text):
+            errors.append('Control stripe dose in not a number!')
+            return
+        if 'recalibration' in self.roi_nodes and self.ui.recalibrationStripeDose.text == '':
+            errors.append('Did not set recalibration stripe dose!')
+            return
+        if 'recalibration' in self.roi_nodes and not isFloat(self.ui.recalibrationStripeDose.text):
+            errors.append('Recalibration stripe dose in not a number!')
+            return
+        return errors
+
+    def onRunButton(self) -> None:
+        errors = self.__onRunButtonCheck()
+        if len(errors) > 0:
+            slicer.util.errorDisplay('\n'.join(errors))
+            return
+
         with slicer.util.tryWithErrorDisplay(_("Failed to compute results."), waitCursor=True):
             print("running")
-            volume_node = self.ui.inputImageSelector.currentNode()
-            self.logic.run(volume_node, self.ui.calibrationFileSelector.currentPath, self.ui.outputSelector.currentPath)
-                
-            plot_path = os.path.join(self.ui.calibrationOutputSelector.currentPath, 'image_dosage.tif')
-            slicer.util.loadVolume(plot_path, properties={'show': True})
+            input_volume_node = self.ui.inputImageSelector.currentNode()
+            if 'recalibration' in self.roi_nodes and 'control' in self.roi_nodes:
+                calibrated_image = self.logic.runDosymetry(input_volume_node, self.ui.calibrationFileSelector.currentPath, self.ui.outputSelector.currentPath, self.roi_nodes, self.settingsWidget.getData(), float(self.ui.controlStripeDose.text), float(self.ui.recalibrationStripeDose.text))
+            else:
+                calibrated_image = self.logic.runDosymetry(input_volume_node, self.ui.calibrationFileSelector.currentPath, self.ui.outputSelector.currentPath, self.roi_nodes, self.settingsWidget.getData())
+            
+            for node in self.roi_nodes.values():
+                slicer.mrmlScene.RemoveNode(node)
+            self.roi_nodes = {}
+            
+            
+            nodeName = 'CallibratedFilm'
+            calibratedVolume = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLScalarVolumeNode", nodeName)
+            slicer.util.updateVolumeFromArray(calibratedVolume, calibrated_image)   
+
+            volumeItkToRas = vtk.vtkMatrix4x4()
+            input_volume_node.GetIJKToRASDirectionMatrix(volumeItkToRas)
+            calibratedVolume.SetIJKToRASDirectionMatrix(volumeItkToRas)           
+            volumeRasToIjk = vtk.vtkMatrix4x4()
+            input_volume_node.GetRASToIJKMatrix(volumeRasToIjk)
+            calibratedVolume.SetRASToIJKMatrix(volumeRasToIjk)
+            calibratedVolume.SetOrigin(input_volume_node.GetOrigin())
+            calibratedVolume.SetSpacing(input_volume_node.GetSpacing())
+
+
+            saveFileName = os.path.join(self.ui.outputSelector.currentPath, 'CallibratedFilm.nrrd')
+            saveImg = sitk.GetImageFromArray(calibrated_image)
+            saveImg.SetOrigin(input_volume_node.GetOrigin())
+            saveImg.SetSpacing(input_volume_node.GetSpacing())
+            sitk.WriteImage(saveImg, saveFileName)
+            # plot_path = os.path.join(self.ui.calibrationOutputSelector.currentPath, 'image_dosage.tif')
+            # slicer.util.loadVolume(plot_path, properties={'show': True})
 
     def onDetectStripes(self) -> None:
         with slicer.util.tryWithErrorDisplay(_("Failed to compute results."), waitCursor=True):
             print("running")
-            volume_node = self.ui.inputImageSelector.currentNode()
-            roi_coordinates = self.logic.detectStripes(volume_node, self.ui.calibrationStripesIncludedCheckbox.checked)
-            self.create_markups(roi_coordinates)
+            input_volume_node = self.ui.inputImageSelector.currentNode()
+            roi_coordinates = self.logic.detectStripes(input_volume_node, self.ui.calibrationStripesIncludedCheckbox.checked)
+            self.createMarkups(roi_coordinates)
             self.stripesDetected = True
             self._checkCanRun()
             
-    def create_markups(self, roi_coordinates):
-        volume_node = self.ui.inputImageSelector.currentNode()  
-        image_spacing = volume_node.GetSpacing()  # Get the spacing (x, y, z)
-        image_origin = volume_node.GetOrigin()  # Get the origin (x, y, z)
+    def createMarkups(self, roi_coordinates):
+        input_volume_node = self.ui.inputImageSelector.currentNode()  
+        image_spacing = input_volume_node.GetSpacing()  # Get the spacing (x, y, z)
+        image_origin = input_volume_node.GetOrigin()  # Get the origin (x, y, z)
 
         for node in self.roi_nodes.values():
             slicer.mrmlScene.RemoveNode(node)
         self.roi_nodes = {}
         
-        x_ras, y_ras, z_ras = self.__point2d_to_ras([roi_coordinates['sample']['x'], roi_coordinates['sample']['y']], image_origin, image_spacing)
+        x_ras, y_ras, z_ras = point2dToRas([roi_coordinates['sample']['x'], roi_coordinates['sample']['y']], image_origin, image_spacing)
         sample_roi_node = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsROINode")
         sample_roi_node.SetXYZ(x_ras, y_ras, z_ras)  
         sample_roi_node.SetSize(roi_coordinates['sample']['w'] * image_spacing[0], roi_coordinates['sample']['h'] * image_spacing[1], 1)
@@ -209,24 +256,14 @@ class dosymetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.roi_nodes['sample'] = sample_roi_node  
         
         size = self.ui.roiSizeSelector.value 
-        for name in ['control', 'max_dose']:
+        for name in ['control', 'recalibration']:
             if name in roi_coordinates:
-                x_ras, y_ras, z_ras = self.__point2d_to_ras([roi_coordinates[name]['x'], roi_coordinates[name]['y']], image_origin, image_spacing)
-                roi_node = self.__create_roi_node(x_ras, y_ras, z_ras, size, name)
+                x_ras, y_ras, z_ras = point2dToRas([roi_coordinates[name]['x'], roi_coordinates[name]['y']], image_origin, image_spacing)
+                roi_node = self.__createRoiNode(x_ras, y_ras, z_ras, size, name)
                 self.roi_nodes[name] = roi_node
             
-            
-    def __point2d_to_ras(self, point, image_origin, image_spacing):
-        row, col = point[1], point[0]  # row and col represent image indices
-        value = 0
-        # Convert from image coordinates (row, col, value) to RAS coordinates
-        x_ras = image_origin[0] - col * image_spacing[0]  # Convert column index to real world x
-        y_ras = image_origin[1] - row * image_spacing[1]  # Convert row index to real world y
-        z_ras = image_origin[2] - value * image_spacing[2]  # Convert value index to real world z
-        
-        return x_ras, y_ras, z_ras
 
-    def __create_roi_node(self, x_ras, y_ras, z_ras, size, name):
+    def __createRoiNode(self, x_ras, y_ras, z_ras, size, name):
         roi_node = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsROINode")
 
         roi_node.SetXYZ(x_ras, y_ras, z_ras)  # Set center in RAS

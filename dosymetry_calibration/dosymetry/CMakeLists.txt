@@ -8,6 +8,9 @@ set(MODULE_PYTHON_SCRIPTS
   src/dosymetry_parameter_node.py
   src/dosymetry_widget.py
   src/imports.py
+  src/utils.py
+  src/optimize.py
+  src/logic_subprocess.py
   src/detect_dosymetry_stripes.py
   src/dosymetry_settings_widget.py
   Testing/Python/example_test.py

@@ -24,10 +24,11 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;3. Select calibration json file path&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;4. Select output path&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;5. If recalibration stripes are included in your image, check &amp;quot;Recalibrate&amp;quot; button in &amp;quot;Recalibration settings&amp;quot;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;6. Adjust created ROIs if needed&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;7. Click &amp;quot;Detect Stripes&amp;quot;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;8. Check Advanced Settings for changing interpolation hyperparameters&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;9. Click &amp;quot;Run&amp;quot;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;6. Click &amp;quot;Detect Stripes&amp;quot;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;7. Adjust created ROIs if needed&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;8. Provide recalibaration stripes doses if used (look step 5)&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;9. Check Advanced Settings for changing interpolation hyperparameters&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;10. Click &amp;quot;Run&amp;quot;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Info:&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Calibration json can be obatined using &amp;quot;Film calibration&amp;quot; module&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -85,6 +86,13 @@ p, li { white-space: pre-wrap; }
         </property>
        </widget>
       </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Output directory path</string>
+        </property>
+       </widget>
+      </item>
       <item row="2" column="1">
        <widget class="ctkPathLineEdit" name="outputSelector">
         <property name="filters">
@@ -92,13 +100,6 @@ p, li { white-space: pre-wrap; }
         </property>
         <property name="options">
          <set>ctkPathLineEdit::ShowDirsOnly</set>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_4">
-        <property name="text">
-         <string>Output directory path</string>
         </property>
        </widget>
       </item>
@@ -117,14 +118,52 @@ p, li { white-space: pre-wrap; }
       <bool>false</bool>
      </property>
      <layout class="QFormLayout" name="formLayout_3">
-      <item row="0" column="0">
+      <item row="1" column="1">
+       <widget class="ctkCheckBox" name="calibrationStripesIncludedCheckbox"/>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Control dose [cGy]</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLineEdit" name="controlStripeDose">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Recalibration dose [cGy]</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLineEdit" name="recalibrationStripeDose">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_9">
+        <property name="text">
+         <string>Recalibrate</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
        <widget class="QLabel" name="label_10">
         <property name="text">
          <string>ROI Size [mm]</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
+      <item row="2" column="1">
        <widget class="qMRMLSliderWidget" name="roiSizeSelector">
         <property name="singleStep">
          <double>0.100000000000000</double>
@@ -139,16 +178,6 @@ p, li { white-space: pre-wrap; }
          <string notr="true"/>
         </property>
        </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_9">
-        <property name="text">
-         <string>Recalibrate</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="ctkCheckBox" name="calibrationStripesIncludedCheckbox"/>
       </item>
      </layout>
     </widget>

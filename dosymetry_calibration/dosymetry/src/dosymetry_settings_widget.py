@@ -4,9 +4,30 @@ import qt
 import slicer
 
 DEFAULT_SETTINGS = {
-    "a": '1',
-    "b": '2',
-    "c": '3'
+    "median_kernel_size": '3',
+    "tolerance": '0.01',
+    "max_iterations": '1000',
+    "normalization_factor": '65536',
+    "max_dose": '3000',
+    "number_of_processes": '6',
+}
+
+SETTINGS_LABELS = {
+    "median_kernel_size": 'Median kernel size (0 for no filter)',
+    "tolerance": 'Tolerance',
+    "max_iterations": 'Max number of iterations',
+    "normalization_factor": 'Image normalization factor',
+    "max_dose": 'Maximal possible dose',
+    "number_of_processes": 'Number of workers',
+}
+
+SETTINGS_PREPROCESSING = {
+    "median_kernel_size": lambda x: int(x),
+    "tolerance": lambda x: float(x),
+    "max_iterations": lambda x: int(x),
+    "normalization_factor": lambda x: int(x),
+    "max_dose": lambda x: float(x),
+    "number_of_processes": lambda x: int(x),
 }
 
 class DosimetrySettingsWidget(object):
@@ -17,9 +38,11 @@ class DosimetrySettingsWidget(object):
             os.makedirs(self.presetsDir)
         
         # Code-defined list of labels
-        self.labels = list(DEFAULT_SETTINGS.keys())
+
         self.textInputs = {}  # Dictionary to hold QLineEdit widgets keyed by label
-        
+        self.default_settings = DEFAULT_SETTINGS
+        self.settings_labels = SETTINGS_LABELS
+        self.settings_preprocessing = SETTINGS_PREPROCESSING
         self.setupUI(parentWidget)
 
     def setupUI(self, parentWidget):
@@ -28,11 +51,16 @@ class DosimetrySettingsWidget(object):
         self.layout = qt.QFormLayout(self.widget)
 
         # Create a text input for each label
-        for label in self.labels:
+        for key in self.default_settings.keys():
             lineEdit = qt.QLineEdit()
-            self.layout.addRow(qt.QLabel(label + ':'), lineEdit)
-            self.textInputs[label] = lineEdit
+            self.layout.addRow(qt.QLabel(self.settings_labels[key] + ':'), lineEdit)
+            self.textInputs[key] = lineEdit
 
+        # Add a dropdown to list and load saved presets
+        self.presetComboBox = qt.QComboBox()
+        self.layout.addRow(qt.QLabel("Load Preset:"), self.presetComboBox)
+        self.presetComboBox.connect('currentIndexChanged(QString)', self.onPresetSelected)
+        
         # Add a text input for naming the preset
         self.presetNameLineEdit = qt.QLineEdit()
         self.layout.addRow(qt.QLabel("Preset Name:"), self.presetNameLineEdit)
@@ -41,11 +69,6 @@ class DosimetrySettingsWidget(object):
         self.saveButton = qt.QPushButton("Save Preset")
         self.layout.addWidget(self.saveButton)
         self.saveButton.connect('clicked()', self.onSavePreset)
-
-        # Add a dropdown to list and load saved presets
-        self.presetComboBox = qt.QComboBox()
-        self.layout.addRow(qt.QLabel("Load Preset:"), self.presetComboBox)
-        self.presetComboBox.connect('currentIndexChanged(QString)', self.onPresetSelected)
 
         # Load any previously saved presets into the dropdown
         self.loadPresetList()
@@ -93,8 +116,8 @@ class DosimetrySettingsWidget(object):
         if not presetName:
             return
         if presetName == 'default':
-            for label, lineEdit in self.textInputs.items():
-                lineEdit.text = DEFAULT_SETTINGS[label]
+            for key, lineEdit in self.textInputs.items():
+                lineEdit.text = self.default_settings[key]
 
         # Construct the file path and load the preset if it exists
         presetFile = os.path.join(self.presetsDir, presetName + ".json")
@@ -110,8 +133,11 @@ class DosimetrySettingsWidget(object):
                 qt.QMessageBox.critical(slicer.util.mainWindow(), "Error", "Failed to load preset: " + str(e))
 
 
-    def getTextData(self):
+    def getData(self):
         settings = {}
-        for label, lineEdit in self.textInputs.items():
-            settings[label] = lineEdit.text
+        try:
+            for label, lineEdit in self.textInputs.items():
+                settings[label] = self.settings_preprocessing[label](lineEdit.text)
+        except:
+            raise ValueError(f"{self.settings_labels[label]} is invalid.")
         return settings

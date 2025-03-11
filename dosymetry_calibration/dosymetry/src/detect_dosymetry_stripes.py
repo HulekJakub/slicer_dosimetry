@@ -35,11 +35,11 @@ def label_contours(stripes_raw, contours):
     if len(valued_contours) > 1:
         valued_contours = sorted(valued_contours[1:], key=lambda x: x[1], reverse=True)
         result['control'] = valued_contours[0][0]
-        result['max_dose'] = valued_contours[1][0]
+        result['recalibration'] = valued_contours[1][0]
     
     return result
 
-def find_maximal_inscribed_rectangle(bin, contour):
+def find_maximal_inscribed_square(bin, contour):
     mask = np.zeros_like(bin).astype(np.uint8)
     cv2.drawContours(mask, [contour], -1, 255, -1)  # Fill the contour
 
@@ -77,12 +77,12 @@ def detect_dosymetry_stripes(stripes_tiff, recalibration_stripes_present):
     contours = find_n_contours(stripes_binarized.astype(np.uint8), 3 if recalibration_stripes_present else 1)
 
     labelled_contours = label_contours(dosymetry_uint8, contours)
-    best_rect = find_maximal_inscribed_rectangle(stripes_binarized, labelled_contours['sample'])
+    best_rect = find_maximal_inscribed_square(stripes_binarized, labelled_contours['sample'])
 
     x, y, rw, rh = best_rect
     roi_coordinates = {'sample': {'x': x + rw//2, 'y': y + rh//2, 'w': rw, 'h': rh}}
     if recalibration_stripes_present:
-        for name in ['control', 'max_dose']:
+        for name in ['control', 'recalibration']:
             M = cv2.moments(labelled_contours[name])
             cx = int(M["m10"] / M["m00"])
             cy = int(M["m01"] / M["m00"])
