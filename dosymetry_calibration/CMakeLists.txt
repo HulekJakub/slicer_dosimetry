@@ -21,6 +21,7 @@ include(${Slicer_USE_FILE})
 # Extension modules
 add_subdirectory(film_calibration)
 add_subdirectory(dosymetry)
+add_subdirectory(gamma_analysis)
 ## NEXT_MODULE
 
 #-----------------------------------------------------------------------------
