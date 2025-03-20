@@ -1,22 +1,9 @@
 from src.imports import *
-import logging
-import os
-from typing import Annotated, Optional
-
-import vtk
 
 import slicer
 from slicer.i18n import tr as _
 from slicer.i18n import translate
 from slicer.ScriptedLoadableModule import *
-from slicer.util import VTKObservationMixin
-from slicer.parameterNodeWrapper import (
-    parameterNodeWrapper,
-    WithinRange,
-)
-
-from slicer import vtkMRMLVectorVolumeNode
-
 
 '''
     Imports for compatibility with Slicer
@@ -45,12 +32,9 @@ class dosymetry(ScriptedLoadableModule):
         self.parent.contributors = ["Jakub Hulek (AGH University of Krakow)"]  # TODO: replace with "Firstname Lastname (Organization)"
         # TODO: update with short description of the module and a link to online module documentation
         # _() function marks text as translatable to other languages
-        self.parent.helpText = _("""
-This is an example of scripted loadable module bundled in an extension.
-See more information in <a href="https://github.com/organization/projectname#dosymetry">module documentation</a>.
-""")
+        self.parent.helpText = _("""""")
         # TODO: replace with organization, grant and thanks
-        self.parent.acknowledgementText = _("""Made by Jakub Hulek, student at AGH University of Krakow""")
+        self.parent.acknowledgementText = _("""I express my gratitude to Professor Zbisław Tabor from AGH University Of Krakow""")
 
         # Additional initialization step after application startup is complete
         slicer.app.connect("startupCompleted()", registerSampleData)

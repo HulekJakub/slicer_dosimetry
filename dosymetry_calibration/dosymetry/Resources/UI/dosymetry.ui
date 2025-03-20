@@ -208,6 +208,36 @@ p, li { white-space: pre-wrap; }
      </property>
     </widget>
    </item>
+   <item>
+    <widget class="QProgressBar" name="progressBar">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="value">
+      <number>0</number>
+     </property>
+     <property name="textVisible">
+      <bool>true</bool>
+     </property>
+     <property name="invertedAppearance">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="controlResult">
+     <property name="text">
+      <string>Should not be visible</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="recalibrationResult">
+     <property name="text">
+      <string>Should not be visible</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <customwidgets>

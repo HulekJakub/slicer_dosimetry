@@ -26,17 +26,19 @@ except ModuleNotFoundError:
 
 matplotlib.use("Agg")
 import qt
+from qt import QObject, Signal, Slot
 
 from src.dosymetry_logic import dosymetryLogic
 from src.dosymetry_parameter_node import dosymetryParameterNode
-from src.dosymetry_settings_widget import DosimetrySettingsWidget
+from src.dosymetry_settings_widget import DosymetrySettingsWidget
 from src.utils import isFloat, point2dToRas
 import SimpleITK as sitk
 
 #
-# dosymetryWidget
+# DosymetryWidget
 #
-
+class Communicate(QObject):                                                 
+    setProgressValue = Signal(int) 
 
 class dosymetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     """Uses ScriptedLoadableModuleWidget base class, available at:
@@ -88,10 +90,22 @@ class dosymetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.settingsFormLayout = qt.QFormLayout(self.settingsCollapsibleButton)
 
         # Initialize the settings widget and add it to the collapsible button layout
-        self.settingsWidget = DosimetrySettingsWidget(parentWidget=self.settingsCollapsibleButton)
+        self.settingsWidget = DosymetrySettingsWidget(parentWidget=self.settingsCollapsibleButton)
         self.settingsFormLayout.addWidget(self.settingsWidget.widget)
         # Make sure parameter node is initialized (needed for module reload)
+        
+        self.monitor = Communicate()
+        self.monitor.setProgressValue.connect(self.setProgressBar)
+        
+        self.ui.progressBar.visible = False
+        self.ui.controlResult.visible = False
+        self.ui.recalibrationResult.visible = False
         self.initializeParameterNode()
+
+    @Slot(int)                                                                  
+    def setProgressBar(self,value) -> None:     
+        self.ui.progressBar.setValue(value)
+        slicer.util.resetSliceViews()
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
@@ -168,71 +182,61 @@ class dosymetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         errors = []
         if self.ui.calibrationFileSelector.currentPath == '':
             errors.append('Did not set calibration file!')
-            return
         if self.ui.outputSelector.currentPath == '':
             errors.append('Did not set output directory!')
-            return
         if 'sample' not in self.roi_nodes:
             errors.append('Sample was not detected!')
-            return
         if 'control' in self.roi_nodes and self.ui.controlStripeDose.text == '':
             errors.append('Did not set control stripe dose!')
-            return
         if 'control' in self.roi_nodes and not isFloat(self.ui.controlStripeDose.text):
             errors.append('Control stripe dose in not a number!')
-            return
         if 'recalibration' in self.roi_nodes and self.ui.recalibrationStripeDose.text == '':
             errors.append('Did not set recalibration stripe dose!')
-            return
         if 'recalibration' in self.roi_nodes and not isFloat(self.ui.recalibrationStripeDose.text):
             errors.append('Recalibration stripe dose in not a number!')
-            return
         return errors
 
     def onRunButton(self) -> None:
         errors = self.__onRunButtonCheck()
+        
+        try:
+            advancedSettings = self.settingsWidget.getData()
+        except ValueError as e:
+            errors.append(e.args[0])
         if len(errors) > 0:
             slicer.util.errorDisplay('\n'.join(errors))
             return
 
         with slicer.util.tryWithErrorDisplay(_("Failed to compute results."), waitCursor=True):
-            print("running")
+            self.ui.progressBar.setValue(0)
+            self.ui.progressBar.visible = True
+            progressUpdateCallback = lambda x: self.monitor.setProgressValue.emit(int(x * 100))
+            
             input_volume_node = self.ui.inputImageSelector.currentNode()
             if 'recalibration' in self.roi_nodes and 'control' in self.roi_nodes:
-                calibrated_image = self.logic.runDosymetry(input_volume_node, self.ui.calibrationFileSelector.currentPath, self.ui.outputSelector.currentPath, self.roi_nodes, self.settingsWidget.getData(), float(self.ui.controlStripeDose.text), float(self.ui.recalibrationStripeDose.text))
+                calibrated_image, control_mean, control_std, recalibration_mean, recalibration_std = self.logic.runDosymetry(input_volume_node, self.ui.calibrationFileSelector.currentPath, self.ui.outputSelector.currentPath, self.roi_nodes, advancedSettings, float(self.ui.controlStripeDose.text), float(self.ui.recalibrationStripeDose.text), progressUpdate=progressUpdateCallback)
             else:
-                calibrated_image = self.logic.runDosymetry(input_volume_node, self.ui.calibrationFileSelector.currentPath, self.ui.outputSelector.currentPath, self.roi_nodes, self.settingsWidget.getData())
+                calibrated_image, control_mean, control_std, recalibration_mean, recalibration_std = self.logic.runDosymetry(input_volume_node, self.ui.calibrationFileSelector.currentPath, self.ui.outputSelector.currentPath, self.roi_nodes, advancedSettings, progressUpdate=progressUpdateCallback)
             
             for node in self.roi_nodes.values():
                 slicer.mrmlScene.RemoveNode(node)
             self.roi_nodes = {}
             
-            
-            nodeName = 'CallibratedFilm'
-            calibratedVolume = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLScalarVolumeNode", nodeName)
-            slicer.util.updateVolumeFromArray(calibratedVolume, calibrated_image)   
-
-            volumeItkToRas = vtk.vtkMatrix4x4()
-            input_volume_node.GetIJKToRASDirectionMatrix(volumeItkToRas)
-            calibratedVolume.SetIJKToRASDirectionMatrix(volumeItkToRas)           
-            volumeRasToIjk = vtk.vtkMatrix4x4()
-            input_volume_node.GetRASToIJKMatrix(volumeRasToIjk)
-            calibratedVolume.SetRASToIJKMatrix(volumeRasToIjk)
-            calibratedVolume.SetOrigin(input_volume_node.GetOrigin())
-            calibratedVolume.SetSpacing(input_volume_node.GetSpacing())
-
-
-            saveFileName = os.path.join(self.ui.outputSelector.currentPath, 'CallibratedFilm.nrrd')
+            saveFileName = os.path.join(self.ui.outputSelector.currentPath, 'sample_dosymetry_result.nrrd')
             saveImg = sitk.GetImageFromArray(calibrated_image)
             saveImg.SetOrigin(input_volume_node.GetOrigin())
             saveImg.SetSpacing(input_volume_node.GetSpacing())
             sitk.WriteImage(saveImg, saveFileName)
-            # plot_path = os.path.join(self.ui.calibrationOutputSelector.currentPath, 'image_dosage.tif')
-            # slicer.util.loadVolume(plot_path, properties={'show': True})
+            if  control_mean is not None and control_std is not None and recalibration_mean is not None and recalibration_std is not None:
+                self.ui.controlResult.text = f"Control stripe mean: {control_mean:.2f}, std:{control_std:.2f}"
+                self.ui.recalibrationResult.text = f"Recalibration stripe mean: {recalibration_mean:.2f}, std:{recalibration_std:.2f}"
+                self.ui.controlResult.visible = True
+                self.ui.recalibrationResult.visible = True
+            
+            slicer.util.loadVolume(saveFileName, properties={'show': True})
 
     def onDetectStripes(self) -> None:
         with slicer.util.tryWithErrorDisplay(_("Failed to compute results."), waitCursor=True):
-            print("running")
             input_volume_node = self.ui.inputImageSelector.currentNode()
             roi_coordinates = self.logic.detectStripes(input_volume_node, self.ui.calibrationStripesIncludedCheckbox.checked)
             self.createMarkups(roi_coordinates)

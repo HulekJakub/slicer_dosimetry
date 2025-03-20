@@ -1,8 +1,32 @@
-
 import slicer
-slicer.util.pip_install("opencv-contrib-python")
-slicer.util.pip_install("scipy")
-slicer.util.pip_install("matplotlib")
-slicer.util.pip_install("numpy")
-slicer.util.pip_install("SimpleITK")
-slicer.util.pip_install("imageio")
+try:
+    import cv2
+except ModuleNotFoundError:
+    slicer.util.pip_install("opencv-contrib-python")
+    
+try:
+    import numpy as np
+except ModuleNotFoundError:
+    slicer.util.pip_install("numpy")
+    
+try:
+    import matplotlib.pyplot as plt
+except ModuleNotFoundError:
+    slicer.util.pip_install("matplotlib")
+    
+try:
+    from scipy.optimize import curve_fit
+except ModuleNotFoundError:
+    slicer.util.pip_install("scipy")
+    
+try:
+    import SimpleITK as sitk
+except ModuleNotFoundError:
+    slicer.util.pip_install("SimpleITK")
+    import cv2
+    
+try:
+    import cv2
+except ModuleNotFoundError:
+    slicer.util.pip_install("imageio")
+    import cv2

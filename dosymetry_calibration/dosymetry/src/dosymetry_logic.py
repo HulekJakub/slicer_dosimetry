@@ -11,35 +11,15 @@ from slicer import vtkMRMLVectorVolumeNode, vtkMRMLScalarVolumeNode
 import slicer.util
 from src.dosymetry_parameter_node import dosymetryParameterNode
 from src.detect_dosymetry_stripes import detect_dosymetry_stripes
-
+from src.utils import isFloat
 import subprocess
 import SimpleITK as sitk
 import shutil
-# dosymetryLogic
+import cv2
+import numpy as np
+# DosymetryLogic
 #
-try:
-    import cv2
-except ModuleNotFoundError:
-    slicer.util.pip_install("opencv-contrib-python")
-    import cv2
-  
-try:
-    import numpy as np
-except ModuleNotFoundError:
-    slicer.util.pip_install("numpy")
-    import numpy as np
 
-try:
-    import matplotlib.pyplot as plt
-except ModuleNotFoundError:
-    slicer.util.pip_install("matplotlib")
-    import matplotlib.pyplot as plt
-
-try:
-    from scipy.optimize import curve_fit
-except ModuleNotFoundError:
-    slicer.util.pip_install("scipy")
-    from scipy.optimize import curve_fit
 
 # python path
 # C:\Users\jakub\AppData\Local\slicer.org\Slicer 5.6.2\bin
@@ -60,7 +40,7 @@ class dosymetryLogic(ScriptedLoadableModuleLogic):
     def getParameterNode(self):
         return dosymetryParameterNode(super().getParameterNode())
     
-    def runDosymetry(self, inputImage: vtkMRMLVectorVolumeNode, calibrationFilePath: str, outputDirectoryPath: str, roiNodes, advancedSettings, controlStripeDose=None, recalibrationStripeDose=None) -> np.ndarray:
+    def runDosymetry(self, inputImage: vtkMRMLVectorVolumeNode, calibrationFilePath: str, outputDirectoryPath: str, roiNodes, advancedSettings, controlStripeDose=None, recalibrationStripeDose=None, progressUpdate=None):
         import time
 
         startTime = time.time()
@@ -72,25 +52,46 @@ class dosymetryLogic(ScriptedLoadableModuleLogic):
         
         
         roiRegions = self.__extractRoiRegions(inputImage, roiNodes)
-        sampleRegionFilePath = self.__exportSampleRegion(roiRegions, tempDir, advancedSettings['median_kernel_size'])
         
-        parameters = self.__createParametersDict(calibrationFilePath, outputDirectoryPath, advancedSettings, controlStripeDose, recalibrationStripeDose, roiRegions, sampleRegionFilePath, tempDir)
-        parameters_path = os.path.join(tempDir, 'parameters.json')
+        sampleRegionFilePath = self.__exportRegion(roiRegions, 'sample', tempDir, advancedSettings['median_kernel_size'])
+        controlRegionFilePath, recalibrationRegionFilePath = None, None
+        if controlStripeDose is not None and recalibrationStripeDose is not None:
+            controlRegionFilePath = self.__exportRegion(roiRegions, 'control', tempDir, advancedSettings['median_kernel_size'])
+            recalibrationRegionFilePath = self.__exportRegion(roiRegions, 'recalibration', tempDir, advancedSettings['median_kernel_size'])
+        
+        parameters = self.__createParametersDict(calibrationFilePath, outputDirectoryPath, advancedSettings, controlStripeDose, recalibrationStripeDose, roiRegions, sampleRegionFilePath, controlRegionFilePath, recalibrationRegionFilePath, tempDir)
+        parameters_path = os.path.join(tempDir, 'sample.json')
         with open(parameters_path, 'w') as f:
             json.dump(parameters, f, indent=2)
         
         process = self.__createProcessingProcess(workDir, parameters_path)
-        for message in self.__monitorProcessing(process):
-            print(f"Received: {message.strip()}", flush=True)
-            
-        result_path = message.strip()
         
+        result_path = None
+        control_mean, control_std, recalibration_mean, recalibration_std = None, None, None, None
+        for message in self.__monitorProcessing(process):
+            tag, value = message.split(';',1)
+            value = value.strip()
+            if tag == 'progress':
+                if progressUpdate is not None and isFloat(value):
+                    progressUpdate(float(value))
+            elif tag == 'sample':
+                result_path = value
+            elif tag == 'control_mean':
+                control_mean = float(value)
+            elif tag == 'control_std':
+                control_std = float(value)
+            elif tag == 'recalibration_mean':
+                recalibration_mean = float(value)    
+            elif tag == 'recalibration_std':
+                recalibration_std = float(value)
+
+        assert result_path is not None
         imgSITK = sitk.ReadImage(result_path)
         img = sitk.GetArrayFromImage(imgSITK)    
         # shutil.rmtree(tempDir)
         stopTime = time.time()
         logging.info(f"Processing completed in {stopTime-startTime:.2f} seconds")
-        return img
+        return img, control_mean, control_std, recalibration_mean, recalibration_std
         
     def detectStripes(self, volume_node, recalibration_stripes_present):
         """
@@ -107,18 +108,18 @@ class dosymetryLogic(ScriptedLoadableModuleLogic):
         
         return output
         
-    def __exportSampleRegion(self, roiRegions, tempDir, kernel_size):
-        img = roiRegions['sample']
+    def __exportRegion(self, roiRegions, key, tempDir, kernel_size):
+        img = roiRegions[key]
             
         if kernel_size >= 1:
             img = cv2.medianBlur(img, ksize=kernel_size)
         
         imSITK = sitk.GetImageFromArray(img)
-        fname = os.path.join(tempDir, 'temp.nii.gz')
+        fname = os.path.join(tempDir, f'{key}.nii')
         sitk.WriteImage(imSITK, fname)
         return fname
         
-    def __createParametersDict(self, calibrationFilePath, outputDirectoryPath, advancedSettings, controlStripeDose, recalibrationStripeDose, roiRegions, sampleRegionFilePath, tempDir):
+    def __createParametersDict(self, calibrationFilePath, outputDirectoryPath, advancedSettings, controlStripeDose, recalibrationStripeDose, roiRegions, sampleRegionFilePath, controlRegionFilePath, recalibrationRegionFilePath, tempDir):
         parameters = {
             **advancedSettings,
             "outputDirectoryPath": outputDirectoryPath,
@@ -133,6 +134,9 @@ class dosymetryLogic(ScriptedLoadableModuleLogic):
             parameters['recalibration_stripe_dose'] = recalibrationStripeDose
             parameters['control_rgb_mean'] = control_rgb_mean
             parameters['recalibration_rgb_mean'] = recalibration_rgb_mean
+            parameters['controlRegionFilePath'] = controlRegionFilePath
+            parameters['recalibrationRegionFilePath'] = recalibrationRegionFilePath
+            
             
         with open(calibrationFilePath, 'r') as f:
             calibration_parameters = json.load(f)
@@ -162,8 +166,8 @@ class dosymetryLogic(ScriptedLoadableModuleLogic):
             yield line
         stderr_output = process.stderr.read()
         if stderr_output:
-            print("Error:", stderr_output.strip())
-        print("Finished with code:",process.wait())
+            logging.error(f"Error: {stderr_output.strip()}")
+        logging.info(f"Finished with code: {process.wait()}")
         
     def __extractRoiRegions(self, volume_node, roi_nodes):
         """Extract regions in IJK format and convert to arrays."""
@@ -181,7 +185,6 @@ class dosymetryLogic(ScriptedLoadableModuleLogic):
             # Get ROI parameters
             bounds = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
             roi_node.GetBounds(bounds)
-            print(bounds)
 
             # Convert RAS bounds to IJK
             col_max = int(round((origin[0] - bounds[0]) / spacing[0]))  
@@ -191,11 +194,9 @@ class dosymetryLogic(ScriptedLoadableModuleLogic):
             
             col_min = max(0, col_min)
             row_min = max(0, row_min)
-            print(image_data.shape)
             col_max = min(image_data.shape[1] - 1, col_max)
             row_max = min(image_data.shape[0] - 1, row_max)
             
-            print((col_min, row_min), (col_max, row_max))
             # Extract region as numpy array
             roi_pixels = image_data[row_min: row_max + 1, col_min: col_max + 1]
 

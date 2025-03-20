@@ -4,7 +4,7 @@ import qt
 import slicer
 
 DEFAULT_SETTINGS = {
-    "median_kernel_size": '3',
+    "median_kernel_size": '0',
     "tolerance": '0.01',
     "max_iterations": '1000',
     "normalization_factor": '65536',
@@ -30,7 +30,7 @@ SETTINGS_PREPROCESSING = {
     "number_of_processes": lambda x: int(x),
 }
 
-class DosimetrySettingsWidget(object):
+class DosymetrySettingsWidget(object):
     def __init__(self, parentWidget=None):
         # Directory to save presets relative to this file.
         self.presetsDir = os.path.join(os.path.dirname(__file__), '..', "presets")
@@ -135,9 +135,12 @@ class DosimetrySettingsWidget(object):
 
     def getData(self):
         settings = {}
-        try:
-            for label, lineEdit in self.textInputs.items():
+        errors = []
+        for label, lineEdit in self.textInputs.items():
+            try:
                 settings[label] = self.settings_preprocessing[label](lineEdit.text)
-        except:
-            raise ValueError(f"{self.settings_labels[label]} is invalid.")
+            except:
+                errors.append(f"{self.settings_labels[label]} is invalid.")
+        if len(errors) > 0:
+            raise ValueError('\n'.join(errors))
         return settings

@@ -10,24 +10,54 @@ import SimpleITK as sitk
 import numpy as np
 
 if __name__ == "__main__":
-    print("start")
     parameters_path = sys.argv[1]
     with open(parameters_path, 'r') as f:
         parameters = json.load(f)
-    imgSITK = sitk.ReadImage(parameters['sampleRegionFilePath'])
-    img = sitk.GetArrayFromImage(imgSITK)    
+    with_recalibration = 'controlRegionFilePath' in parameters and 'recalibrationRegionFilePath' in parameters
     
-    args_list = [(img[y], parameters) for y in range(img.shape[0])]
-    results = {}
+    sampleImgSITK = sitk.ReadImage(parameters['sampleRegionFilePath'])
+    sampleImg = sitk.GetArrayFromImage(sampleImgSITK)
+    args_list = [(sampleImg[y], parameters) for y in range(sampleImg.shape[0])]
+    if with_recalibration:
+        control_start_id = len(args_list)
+        controlImgSITK = sitk.ReadImage(parameters['controlRegionFilePath'])
+        controlImg = sitk.GetArrayFromImage(controlImgSITK)
+        args_list.extend([(controlImg[y], parameters) for y in range(controlImg.shape[0])])
+        
+        
+        recalibration_start_id = len(args_list)
+        recalibrationImgSITK = sitk.ReadImage(parameters['recalibrationRegionFilePath'])
+        recalibrationImg = sitk.GetArrayFromImage(recalibrationImgSITK)
+        args_list.extend([(recalibrationImg[y], parameters) for y in range(recalibrationImg.shape[0])])
+        
+    results_sample = {}
+    results_control = {}
+    results_recalibration = {}
+    to_do = len(args_list)
     done = 0
     for id, result in parrarelize_processes(optimize, args_list, n_executors=parameters['number_of_processes']):
         done += 1
-        results[id] = result
-        print(done/img.shape[0], flush=True)
+        if id < control_start_id:
+            results_sample[id] = result
+        elif id >= control_start_id and id < recalibration_start_id:
+            results_control[id] = result
+        else:
+            results_recalibration[id] = result
+         
+        print(f'progress;{done/to_do}', flush=True)
     
-    full_image = np.stack([results[i] for i in sorted(results.keys())], axis=0)
-    imSITK = sitk.GetImageFromArray(full_image)
+    sample_result_image = np.stack([results_sample[i] for i in sorted(results_sample.keys())], axis=0)
+    sample_result_SITK = sitk.GetImageFromArray(sample_result_image)
     # np.save(os.path.join(parameters['outputDirectoryPath'], 'result_numpy.npy'), full_image)
-    fname = os.path.join(parameters['tempPath'], 'result.nii.gz')
-    sitk.WriteImage(imSITK, fname)
-    print(fname, flush=True)
+    sample_filename = os.path.join(parameters['tempPath'], 'sample_result.nii')
+    sitk.WriteImage(sample_result_SITK, sample_filename)
+    
+    control_result_image = np.stack([results_control[i] for i in sorted(results_control.keys())], axis=0)
+    recalibration_result_image = np.stack([results_recalibration[i] for i in sorted(results_recalibration.keys())], axis=0)
+
+    print(f'sample;{sample_filename}', flush=True)
+    print(f'control_mean;{control_result_image.mean()}', flush=True)
+    print(f'control_std;{control_result_image.std()}', flush=True)
+    print(f'recalibration_mean;{recalibration_result_image.mean()}', flush=True)
+    print(f'recalibration_std;{recalibration_result_image.std()}', flush=True)
+    
