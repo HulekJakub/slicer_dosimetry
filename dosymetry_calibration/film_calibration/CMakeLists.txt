@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------
-set(MODULE_NAME film_calibration)
+set(MODULE_NAME FilmCalibration)
 
 #-----------------------------------------------------------------------------
 set(MODULE_PYTHON_SCRIPTS

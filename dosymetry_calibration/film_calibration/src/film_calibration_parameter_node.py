@@ -1,5 +1,3 @@
-from typing import Annotated
-
 from slicer.ScriptedLoadableModule import *
 from slicer.parameterNodeWrapper import parameterNodeWrapper
 

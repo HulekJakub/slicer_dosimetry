@@ -164,3 +164,4 @@ cython_debug/
 **/.vscode
 **/temp
 algorithm_dev
+**/presets

@@ -6,7 +6,7 @@ import slicer
 from slicer.i18n import tr as _
 from slicer.ScriptedLoadableModule import *
 
-from slicer import vtkMRMLVectorVolumeNode, vtkMRMLScalarVolumeNode
+from slicer import vtkMRMLVectorVolumeNode
 from src.marker_detection import markers_detection
 
 import slicer.util
@@ -14,29 +14,11 @@ from src.film_calibration_parameter_node import film_calibrationParameterNode
 #
 # film_calibrationLogic
 #
-try:
-    import cv2
-except ModuleNotFoundError:
-    slicer.util.pip_install("opencv-contrib-python")
-    import cv2
-  
-try:
-    import numpy as np
-except ModuleNotFoundError:
-    slicer.util.pip_install("numpy")
-    import numpy as np
 
-try:
-    import matplotlib.pyplot as plt
-except ModuleNotFoundError:
-    slicer.util.pip_install("matplotlib")
-    import matplotlib.pyplot as plt
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
 
-try:
-    from scipy.optimize import curve_fit
-except ModuleNotFoundError:
-    slicer.util.pip_install("scipy")
-    from scipy.optimize import curve_fit
 
 # python path
 # C:\Users\jakub\AppData\Local\slicer.org\Slicer 5.6.2\bin
@@ -76,7 +58,6 @@ class film_calibrationLogic(ScriptedLoadableModuleLogic):
             calibration_lines = [line.strip() for line in f.readlines() if line.strip() != '']
         output = markers_detection(img, calibration_lines)
 
-        print(output)
         # slicer.util.updateVolumeFromArray(outputVolume, img_gray[np.newaxis,:,:])
         
         stopTime = time.time()
@@ -119,7 +100,6 @@ class film_calibrationLogic(ScriptedLoadableModuleLogic):
             # Get ROI parameters
             bounds = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
             roi_node.GetBounds(bounds)
-            print(bounds)
 
             # Convert RAS bounds to IJK
             col_max = int(round((origin[0] - bounds[0]) / spacing[0]))  
@@ -129,11 +109,9 @@ class film_calibrationLogic(ScriptedLoadableModuleLogic):
             
             col_min = max(0, col_min)
             row_min = max(0, row_min)
-            print(image_data.shape)
             col_max = min(image_data.shape[1] - 1, col_max)
             row_max = min(image_data.shape[0] - 1, row_max)
             
-            print((col_min, row_min), (col_max, row_max))
             # Extract region as numpy array
             roi_pixels = image_data[row_min: row_max + 1, col_min: col_max + 1]
 
@@ -157,10 +135,6 @@ class film_calibrationLogic(ScriptedLoadableModuleLogic):
             popt, _ = curve_fit(model_func, x_data, y_median, p0=initial_guess, sigma=sigma)
             fitted_a, fitted_b, fitted_c = popt
 
-            print("Fitted parameters:")
-            print("a =", fitted_a)
-            print("b =", fitted_b)
-            print("c =", fitted_c)
             interpolation_parameters[color] = {'a': fitted_a, 'b': fitted_b, 'c': fitted_c}
         return interpolation_parameters
 

@@ -4,27 +4,13 @@ from typing import Annotated, Optional
 
 import slicer.util
 import vtk
-from vtk import vtkVector3d
 
 import slicer
 from slicer.i18n import tr as _
-from slicer.i18n import translate
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
-from slicer.parameterNodeWrapper import (
-    parameterNodeWrapper,
-    WithinRange,
-)
 
 from slicer import vtkMRMLVectorVolumeNode
-try:
-    import matplotlib
-except ModuleNotFoundError:
-    slicer.util.pip_install("matplotlib")
-    import matplotlib
-
-matplotlib.use("Agg")
-import qt
 
 from src.film_calibration_logic import film_calibrationLogic
 from src.film_calibration_parameter_node import film_calibrationParameterNode
@@ -145,7 +131,6 @@ class film_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
 
     def _checkCanDetectStripes(self, caller=None, event=None) -> None:
-        print(self.ui.calibrationFileSelector.currentPath)
         if self._parameterNode and self._parameterNode.inputImage is not None:
             self.ui.detectStripesButton.toolTip = _("Detect stripes")
             self.ui.detectStripesButton.enabled = True
@@ -154,7 +139,6 @@ class film_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.ui.detectStripesButton.enabled = False
     
     def _checkCanGenerateCalibration(self, caller=None, event=None) -> None:
-        print(self.ui.calibrationOutputSelector.currentPath)
         if not self.stripesDetected:
             self.ui.generateCalibrationButton.toolTip = _("First detect stripes!")
             self.ui.generateCalibrationButton.enabled = False
@@ -199,10 +183,9 @@ class film_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             slicer.util.errorDisplay('Did not set calibration output directory!')
             return
         with slicer.util.tryWithErrorDisplay(_("Failed to compute results."), waitCursor=True):
-            print("calibration")
             volume_node = self.ui.inputImageSelector.currentNode()
             interpolation_parameters = self.logic.create_calibration(volume_node, self.roi_nodes, self.ui.calibrationFileSelector.currentPath, self.ui.calibrationOutputSelector.currentPath)
-            print(interpolation_parameters)
+            logging.info(interpolation_parameters)
                 
             plot_path = os.path.join(self.ui.calibrationOutputSelector.currentPath, 'calibration_plot.png')
             for node in self.roi_nodes.values():
