@@ -1,0 +1,201 @@
+import logging
+import os
+from typing import Annotated, Optional
+
+import ctk
+import slicer.util
+import vtk
+from vtk import vtkVector3d
+
+import slicer
+from slicer.i18n import tr as _
+from slicer.i18n import translate
+from slicer.ScriptedLoadableModule import *
+from slicer.util import VTKObservationMixin
+from slicer.parameterNodeWrapper import (
+    parameterNodeWrapper,
+    WithinRange,
+)
+
+from slicer import vtkMRMLVectorVolumeNode
+import matplotlib
+
+
+matplotlib.use("Agg")
+import qt
+
+
+from src.gamma_analysis_logic import gamma_analysisLogic
+from src.gamma_analysis_settings_widget import GammaAnalysisSettingsWidget
+from src.gamma_analysis_parameter_node import gamma_analysisParameterNode
+from src.utils import isFloat, point2dToRas
+import SimpleITK as sitk
+
+#
+# gamma_analysisWidget
+#
+
+
+class gamma_analysisWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
+    """Uses ScriptedLoadableModuleWidget base class, available at:
+    https://github.com/Slicer/Slicer/blob/main/Base/Python/slicer/ScriptedLoadableModule.py
+    """
+
+    def __init__(self, parent=None) -> None:
+        """Called when the user opens the module the first time and the widget is initialized."""
+        ScriptedLoadableModuleWidget.__init__(self, parent)
+        VTKObservationMixin.__init__(self)  # needed for parameter node observation
+        self.logic: Optional[gamma_analysisLogic] = None
+        self._parameterNode: Optional[gamma_analysisParameterNode] = None
+        self._parameterNodeGuiTag = None
+        self.stripesDetected = False
+        self.roi_nodes = {}
+        self.settingsWidget = None
+
+    def setup(self) -> None:
+        """Called when the user opens the module the first time and the widget is initialized."""
+        ScriptedLoadableModuleWidget.setup(self)
+
+        # Load widget from .ui file (created by Qt Designer).
+        # Additional widgets can be instantiated manually and added to self.layout.
+        uiWidget = slicer.util.loadUI(self.resourcePath("UI/gamma_analysis.ui"))
+        self.layout.addWidget(uiWidget)
+        self.ui = slicer.util.childWidgetVariables(uiWidget)
+
+        # Set scene in MRML widgets. Make sure that in Qt designer the top-level qMRMLWidget's
+        # "mrmlSceneChanged(vtkMRMLScene*)" signal in is connected to each MRML widget's.
+        # "setMRMLScene(vtkMRMLScene*)" slot.
+        uiWidget.setMRMLScene(slicer.mrmlScene)
+
+        self.logic = gamma_analysisLogic()
+
+        # These connections ensure that we update parameter node when scene is closed
+        self.addObserver(slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose)
+        self.addObserver(slicer.mrmlScene, slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
+
+        # Buttons
+        self.ui.runButton.connect("clicked(bool)", self.onRunButton)
+
+        self.settingsCollapsibleButton = ctk.ctkCollapsibleButton()
+        self.settingsCollapsibleButton.text = "Advanced Settings"
+        self.settingsCollapsibleButton.checked = True
+        self.layout.addWidget(self.settingsCollapsibleButton)
+
+        # Create a layout for the collapsible button
+        self.settingsFormLayout = qt.QFormLayout(self.settingsCollapsibleButton)
+
+        # Initialize the settings widget and add it to the collapsible button layout
+        self.settingsWidget = GammaAnalysisSettingsWidget(parentWidget=self.settingsCollapsibleButton)
+        self.settingsFormLayout.addWidget(self.settingsWidget.widget)
+        # Make sure parameter node is initialized (needed for module reload)
+        
+        self.initializeParameterNode()
+
+
+    def cleanup(self) -> None:
+        """Called when the application closes and the module widget is destroyed."""
+        self.removeObservers()
+
+    def enter(self) -> None:
+        """Called each time the user opens this module."""
+        # Make sure parameter node exists and observed
+        self.initializeParameterNode()
+
+    def exit(self) -> None:
+        """Called each time the user opens a different module."""
+        # Do not react to parameter node changes (GUI will be updated when the user enters into the module)
+        if self._parameterNode:
+            self._parameterNode.disconnectGui(self._parameterNodeGuiTag)
+            self._parameterNodeGuiTag = None
+            self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanRun)
+
+    def onSceneStartClose(self, caller, event) -> None:
+        """Called just before the scene is closed."""
+        self.setParameterNode(None)
+
+    def onSceneEndClose(self, caller, event) -> None:
+        """Called just after the scene is closed."""
+        if self.parent.isEntered:
+            self.initializeParameterNode()
+
+    def initializeParameterNode(self) -> None:
+        """Ensure parameter node exists and observed."""
+        # Parameter node stores all user choices in parameter values, node selections, etc.
+        # so that when the scene is saved and reloaded, these settings are restored.
+
+        self.setParameterNode(self.logic.getParameterNode())
+
+        # Select default input nodes if nothing is selected yet to save a few clicks for the user
+        if not self._parameterNode.inputImage:
+            firstVolumeNode = slicer.mrmlScene.GetFirstNodeByClass("vtkMRMLVectorVolumeNode")
+            if firstVolumeNode:
+                self._parameterNode.inputImage = firstVolumeNode
+
+    def setParameterNode(self, inputParameterNode: Optional[gamma_analysisParameterNode]) -> None:
+        """
+        Set and observe parameter node.
+        Observation is needed because when the parameter node is changed then the GUI must be updated immediately.
+        """
+
+        if self._parameterNode:
+            self._parameterNode.disconnectGui(self._parameterNodeGuiTag)
+            self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanRun)
+        self._parameterNode = inputParameterNode
+        if self._parameterNode:
+            # Note: in the .ui file, a Qt dynamic property called "SlicerParameterName" is set on each
+            # ui element that needs connection.
+            self._parameterNodeGuiTag = self._parameterNode.connectGui(self.ui)
+            self.addObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanRun)
+            self._checkCanRun()
+
+    def _checkCanRun(self, caller=None, event=None) -> None:
+        # if self._parameterNode and self._parameterNode.inputImage is not None and self.stripesDetected:
+        #     self.ui.runButton.toolTip = _("Run measurement")
+        #     self.ui.runButton.enabled = True
+        # else:
+        #     self.ui.runButton.toolTip = _("Select input volume, detect stripes and calibration file path")
+        #     self.ui.runButton.enabled = False
+            
+        # if self._parameterNode and self._parameterNode.inputImage is not None:
+        #     self.ui.detectStripesButton.toolTip = _("Detect stripes")
+        #     self.ui.detectStripesButton.enabled = True
+        # else:
+        #     self.ui.detectStripesButton.toolTip = _("Select input volume")
+        #     self.ui.detectStripesButton.enabled = False
+        pass
+    
+    def __onRunButtonCheck(self):
+        errors = []
+        # if self.ui.calibrationFileSelector.currentPath == '':
+        #     errors.append('Did not set calibration file!')
+        # if self.ui.outputSelector.currentPath == '':
+        #     errors.append('Did not set output directory!')
+        # if 'sample' not in self.roi_nodes:
+        #     errors.append('Sample was not detected!')
+        # if 'control' in self.roi_nodes and self.ui.controlStripeDose.text == '':
+        #     errors.append('Did not set control stripe dose!')
+        # if 'control' in self.roi_nodes and not isFloat(self.ui.controlStripeDose.text):
+        #     errors.append('Control stripe dose in not a number!')
+        # if 'recalibration' in self.roi_nodes and self.ui.recalibrationStripeDose.text == '':
+        #     errors.append('Did not set recalibration stripe dose!')
+        # if 'recalibration' in self.roi_nodes and not isFloat(self.ui.recalibrationStripeDose.text):
+        #     errors.append('Recalibration stripe dose in not a number!')
+        return errors
+
+    def onRunButton(self) -> None:
+        errors = self.__onRunButtonCheck()
+        
+        try:
+            advancedSettings = self.settingsWidget.getData()
+        except ValueError as e:
+            errors.append(e.args[0])
+            
+        if len(errors) > 0:
+            slicer.util.errorDisplay('\n'.join(errors))
+            return
+
+        with slicer.util.tryWithErrorDisplay(_("Failed to compute results."), waitCursor=True):
+            pass
+
+
+            
