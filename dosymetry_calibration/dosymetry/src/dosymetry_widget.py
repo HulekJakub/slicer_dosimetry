@@ -222,7 +222,7 @@ class dosymetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 slicer.mrmlScene.RemoveNode(node)
             self.roi_nodes = {}
             
-            saveFileName = os.path.join(self.ui.outputSelector.currentPath, 'sample_dosymetry_result.nrrd')
+            saveFileName = os.path.join(self.ui.outputSelector.currentPath, 'dosymetry_result.nrrd')
             saveImg = sitk.GetImageFromArray(calibrated_image)
             saveImg.SetOrigin(input_volume_node.GetOrigin())
             saveImg.SetSpacing(input_volume_node.GetSpacing())

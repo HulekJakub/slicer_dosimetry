@@ -71,6 +71,7 @@ class dosymetryLogic(ScriptedLoadableModuleLogic):
         for message in self.__monitorProcessing(process):
             tag, value = message.split(';',1)
             value = value.strip()
+            tag = tag.strip()
             if tag == 'progress':
                 if progressUpdate is not None and isFloat(value):
                     progressUpdate(float(value))
