@@ -189,21 +189,26 @@ class gamma_analysisWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             dose_threshold = advancedSettings['dose_threshold']
             dta = advancedSettings['dta']
             GPR, gammaImage, alignedRtDose = self.logic.runGammaAnalysis(self._parameterNode.dosymetryResultVolume, self._parameterNode.rtDoseVolume, self.ui.rtPlanFileSelector.currentPath, dose, dose_threshold, dta)
-            
-            # TODO
-            # TODO visualize alignedRtDose
+
             nodeName = 'RegisteredTPSDose'
-            registeredDose = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLScalarVolumeNode", nodeName)
-            slicer.util.updateVolumeFromArray(registeredDose, alignedRtDose)    
+            registeredDose = self.__get_or_create_node(nodeName, "vtkMRMLScalarVolumeNode")
+            slicer.util.updateVolumeFromArray(registeredDose, alignedRtDose)
             registeredDose.SetOrigin(self._parameterNode.dosymetryResultVolume.GetOrigin())
             registeredDose.SetSpacing(self._parameterNode.dosymetryResultVolume.GetSpacing())
-            
+
             nodeName = 'GammaImage'
-            gammaCroppedVolume = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLScalarVolumeNode", nodeName)
-            slicer.util.updateVolumeFromArray(gammaCroppedVolume, gammaImage)    
+            gammaCroppedVolume = self.__get_or_create_node(nodeName, "vtkMRMLScalarVolumeNode")
+            slicer.util.updateVolumeFromArray(gammaCroppedVolume, gammaImage)
             gammaCroppedVolume.SetOrigin(self._parameterNode.dosymetryResultVolume.GetOrigin())
             gammaCroppedVolume.SetSpacing(self._parameterNode.dosymetryResultVolume.GetSpacing())
 
             # CImg(alignedRtDose).display('registered TPS dose')
             # CImg(gammaImage).display('gamma image')
             self.ui.gammaLineEdit.text = f'{GPR:.2f}'
+
+    def __get_or_create_node(self, nodeName, nodeClass):
+        existingNode = slicer.mrmlScene.GetFirstNodeByName(nodeName)
+        if existingNode:
+            return existingNode
+        else:
+            return slicer.mrmlScene.AddNewNodeByClass(nodeClass, nodeName)
