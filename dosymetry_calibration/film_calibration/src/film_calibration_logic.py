@@ -20,8 +20,6 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
 
-# python path
-# C:\Users\jakub\AppData\Local\slicer.org\Slicer 5.6.2\bin
 class film_calibrationLogic(ScriptedLoadableModuleLogic):
     """This class should implement all the actual
     computation done by your module.  The interface

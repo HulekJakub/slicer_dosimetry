@@ -16,8 +16,8 @@ SETTINGS_LABELS = {
 }
 
 SETTINGS_PREPROCESSING = {
-    "dose": lambda x: int(x),
-    "dose_threshold": lambda x: int(x),
+    "dose": lambda x: float(x),
+    "dose_threshold": lambda x: float(x),
     "dta": lambda x: float(x),
 }
 

@@ -1,35 +1,29 @@
-import logging
-import os
 from typing import Annotated, Optional
+import qt
 
 import ctk
 import slicer.util
 import vtk
-from vtk import vtkVector3d
 
 import slicer
 from slicer.i18n import tr as _
-from slicer.i18n import translate
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
-from slicer.parameterNodeWrapper import (
-    parameterNodeWrapper,
-    WithinRange,
-)
 
-from slicer import vtkMRMLVectorVolumeNode
+
 import matplotlib
 
 
 matplotlib.use("Agg")
-import qt
 
+import vtk
+
+
+from slicer import vtkMRMLScalarVolumeNode
 
 from src.gamma_analysis_logic import gamma_analysisLogic
 from src.gamma_analysis_settings_widget import GammaAnalysisSettingsWidget
 from src.gamma_analysis_parameter_node import gamma_analysisParameterNode
-from src.utils import isFloat, point2dToRas
-import SimpleITK as sitk
 
 #
 # gamma_analysisWidget
@@ -126,10 +120,10 @@ class gamma_analysisWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.setParameterNode(self.logic.getParameterNode())
 
         # Select default input nodes if nothing is selected yet to save a few clicks for the user
-        if not self._parameterNode.inputImage:
-            firstVolumeNode = slicer.mrmlScene.GetFirstNodeByClass("vtkMRMLVectorVolumeNode")
-            if firstVolumeNode:
-                self._parameterNode.inputImage = firstVolumeNode
+        # if not self._parameterNode.dosymetryResultVolume:
+        #     firstVolumeNode = slicer.mrmlScene.GetFirstNodeByClass("vtkMRMLScalarVolumeNode")
+        #     if firstVolumeNode:
+        #         self._parameterNode.dosymetryResult = firstVolumeNode
 
     def setParameterNode(self, inputParameterNode: Optional[gamma_analysisParameterNode]) -> None:
         """
@@ -149,25 +143,18 @@ class gamma_analysisWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self._checkCanRun()
 
     def _checkCanRun(self, caller=None, event=None) -> None:
-        # if self._parameterNode and self._parameterNode.inputImage is not None and self.stripesDetected:
-        #     self.ui.runButton.toolTip = _("Run measurement")
-        #     self.ui.runButton.enabled = True
-        # else:
-        #     self.ui.runButton.toolTip = _("Select input volume, detect stripes and calibration file path")
-        #     self.ui.runButton.enabled = False
-            
-        # if self._parameterNode and self._parameterNode.inputImage is not None:
-        #     self.ui.detectStripesButton.toolTip = _("Detect stripes")
-        #     self.ui.detectStripesButton.enabled = True
-        # else:
-        #     self.ui.detectStripesButton.toolTip = _("Select input volume")
-        #     self.ui.detectStripesButton.enabled = False
-        pass
+        if self._parameterNode and self._parameterNode.dosymetryResultVolume is not None and self._parameterNode.rtDoseVolume is not None:
+            self.ui.runButton.toolTip = _("Compute gamma index")
+            self.ui.runButton.enabled = True
+        else:
+            self.ui.runButton.toolTip = _("Select reference and evaluated volume nodes")
+            self.ui.runButton.enabled = False
+
     
     def __onRunButtonCheck(self):
         errors = []
-        # if self.ui.calibrationFileSelector.currentPath == '':
-        #     errors.append('Did not set calibration file!')
+        if self.ui.rtPlanFileSelector.currentPath == '':
+            errors.append('Did not set RT Plan File!')
         # if self.ui.outputSelector.currentPath == '':
         #     errors.append('Did not set output directory!')
         # if 'sample' not in self.roi_nodes:
@@ -190,12 +177,33 @@ class gamma_analysisWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         except ValueError as e:
             errors.append(e.args[0])
             
+        if self._parameterNode is None or self._parameterNode.dosymetryResultVolume is None or self._parameterNode.rtDoseVolume is None:
+            errors.append("Select reference and evaluated volume nodes")
+            
         if len(errors) > 0:
             slicer.util.errorDisplay('\n'.join(errors))
             return
 
         with slicer.util.tryWithErrorDisplay(_("Failed to compute results."), waitCursor=True):
-            pass
-
-
+            dose = advancedSettings['dose']
+            dose_threshold = advancedSettings['dose_threshold']
+            dta = advancedSettings['dta']
+            GPR, gammaImage, alignedRtDose = self.logic.runGammaAnalysis(self._parameterNode.dosymetryResultVolume, self._parameterNode.rtDoseVolume, self.ui.rtPlanFileSelector.currentPath, dose, dose_threshold, dta)
             
+            # TODO
+            # TODO visualize alignedRtDose
+            nodeName = 'RegisteredTPSDose'
+            registeredDose = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLScalarVolumeNode", nodeName)
+            slicer.util.updateVolumeFromArray(registeredDose, alignedRtDose)    
+            registeredDose.SetOrigin(self._parameterNode.dosymetryResultVolume.GetOrigin())
+            registeredDose.SetSpacing(self._parameterNode.dosymetryResultVolume.GetSpacing())
+            
+            nodeName = 'GammaImage'
+            gammaCroppedVolume = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLScalarVolumeNode", nodeName)
+            slicer.util.updateVolumeFromArray(gammaCroppedVolume, gammaImage)    
+            gammaCroppedVolume.SetOrigin(self._parameterNode.dosymetryResultVolume.GetOrigin())
+            gammaCroppedVolume.SetSpacing(self._parameterNode.dosymetryResultVolume.GetSpacing())
+
+            # CImg(alignedRtDose).display('registered TPS dose')
+            # CImg(gammaImage).display('gamma image')
+            self.ui.gammaLineEdit.text = f'{GPR:.2f}'

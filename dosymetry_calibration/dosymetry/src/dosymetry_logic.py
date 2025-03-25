@@ -21,8 +21,6 @@ import numpy as np
 #
 
 
-# python path
-# C:\Users\jakub\AppData\Local\slicer.org\Slicer 5.6.2\bin
 class dosymetryLogic(ScriptedLoadableModuleLogic):
     """This class should implement all the actual
     computation done by your module.  The interface
