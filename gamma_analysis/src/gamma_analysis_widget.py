@@ -212,19 +212,24 @@ class gamma_analysisWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             registeredDose.SetSpacing(
                 self._parameterNode.dosymetryResultVolume.GetSpacing()
             )
-
+            
             nodeName = "GammaImage"
-            gammaCroppedVolume = self.__get_or_create_node(
+            gammaVolume = self.__get_or_create_node(
                 nodeName, "vtkMRMLScalarVolumeNode"
             )
-            slicer.util.updateVolumeFromArray(gammaCroppedVolume, gammaImage)
-            gammaCroppedVolume.SetOrigin(
+            slicer.util.updateVolumeFromArray(gammaVolume, gammaImage)
+            gammaVolume.SetOrigin(
                 self._parameterNode.dosymetryResultVolume.GetOrigin()
             )
-            gammaCroppedVolume.SetSpacing(
+            gammaVolume.SetSpacing(
                 self._parameterNode.dosymetryResultVolume.GetSpacing()
             )
-
+            slicer.app.layoutManager().sliceWidget("Red").sliceLogic().GetSliceCompositeNode().SetBackgroundVolumeID(gammaVolume.GetID())
+            sliceLogics = slicer.app.layoutManager().mrmlSliceLogics()
+            for i in range(sliceLogics.GetNumberOfItems()):
+                sliceLogic = sliceLogics.GetItemAsObject(i)
+                if sliceLogic:
+                    sliceLogic.FitSliceToAll()
             # CImg(alignedRtDose).display('registered TPS dose')
             # CImg(gammaImage).display('gamma image')
             self.ui.gammaLineEdit.text = f"{GPR:.2f}"

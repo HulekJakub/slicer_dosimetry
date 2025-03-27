@@ -245,40 +245,30 @@ class dosymetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             progressUpdateCallback = lambda x: self.monitor.setProgressValue.emit(
                 int(x * 100)
             )
-
             input_volume_node = self.ui.inputImageSelector.currentNode()
+            
+            control_dose, recalibration_dose = None, None
             if "recalibration" in self.roi_nodes and "control" in self.roi_nodes:
-                (
-                    calibrated_image,
-                    control_mean,
-                    control_std,
-                    recalibration_mean,
-                    recalibration_std,
-                ) = self.logic.runDosymetry(
-                    input_volume_node,
-                    self.ui.calibrationFileSelector.currentPath,
-                    self.ui.outputSelector.currentPath,
-                    self.roi_nodes,
-                    advancedSettings,
-                    float(self.ui.controlStripeDose.text),
-                    float(self.ui.recalibrationStripeDose.text),
-                    progressUpdate=progressUpdateCallback,
-                )
-            else:
-                (
-                    calibrated_image,
-                    control_mean,
-                    control_std,
-                    recalibration_mean,
-                    recalibration_std,
-                ) = self.logic.runDosymetry(
-                    input_volume_node,
-                    self.ui.calibrationFileSelector.currentPath,
-                    self.ui.outputSelector.currentPath,
-                    self.roi_nodes,
-                    advancedSettings,
-                    progressUpdate=progressUpdateCallback,
-                )
+                control_dose = float(self.ui.controlStripeDose.text)
+                recalibration_dose = float(self.ui.recalibrationStripeDose.text)
+                
+            (
+                calibrated_image,
+                control_mean,
+                control_std,
+                recalibration_mean,
+                recalibration_std,
+            ) = self.logic.runDosymetry(
+                input_volume_node,
+                self.ui.calibrationFileSelector.currentPath,
+                self.ui.outputSelector.currentPath,
+                self.roi_nodes,
+                advancedSettings,
+                control_dose,
+                recalibration_dose,
+                progressUpdate=progressUpdateCallback,
+            )
+
 
             for node in self.roi_nodes.values():
                 slicer.mrmlScene.RemoveNode(node)
