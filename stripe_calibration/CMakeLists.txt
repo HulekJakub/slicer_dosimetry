@@ -7,7 +7,6 @@ set(MODULE_PYTHON_SCRIPTS
   src/stripe_calibration_logic.py
   src/stripe_calibration_parameter_node.py
   src/stripe_calibration_widget.py
-  src/imports.py
   src/marker_detection.py
   Testing/Python/example_test.py
 )

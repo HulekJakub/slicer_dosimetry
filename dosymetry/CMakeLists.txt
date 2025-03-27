@@ -8,7 +8,6 @@ set(MODULE_PYTHON_SCRIPTS
   src/dosymetry_logic.py
   src/dosymetry_parameter_node.py
   src/dosymetry_widget.py
-  src/imports.py
   src/utils.py
   src/optimize.py
   src/logic_subprocess.py

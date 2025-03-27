@@ -8,7 +8,6 @@ set(MODULE_PYTHON_SCRIPTS
   src/gamma_analysis_parameter_node.py
   src/gamma_analysis_widget.py
   src/gamma_analysis_settings_widget.py
-  src/imports.py
   src/utils.py
   src/gamma_analysis_settings_widget.py
   Testing/Python/example_test.py
