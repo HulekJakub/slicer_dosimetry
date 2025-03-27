@@ -39,7 +39,7 @@ git pull
 3. Click the "Select extension" button.
 4. Find the location of the extension and select it (make sure to select the extension directory (**slicer_dosymetry**), **not** the individual module name).
 5. Agree to adding everything to "additional module paths".
-6. It's done. If you cannot find "Dosymetry" list, restart Slicer.  
+6. It's done. Please restart Slicer so that the extension can import any Python library it may need.  
 
 ![alt text](docs/imgs/dosymetry_module_list.png)
 
