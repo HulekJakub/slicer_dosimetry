@@ -1,4 +1,3 @@
-
 import slicer
 from slicer.ScriptedLoadableModule import *
 
@@ -75,10 +74,9 @@ class example_testTest1(ScriptedLoadableModuleTest):
         # self.assertEqual(outputScalarRange[1], inputScalarRange[1])
 
         self.delayDisplay("Test passed")
-        
-        
+
     def test_dosymetry2(self):
 
-        self.assertEqual(1, 0+1)
+        self.assertEqual(1, 0 + 1)
 
         self.delayDisplay("Test passed")

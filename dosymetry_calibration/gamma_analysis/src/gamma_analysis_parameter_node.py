@@ -5,6 +5,7 @@ from slicer.parameterNodeWrapper import parameterNodeWrapper
 
 from slicer import vtkMRMLScalarVolumeNode
 
+
 @parameterNodeWrapper
 class gamma_analysisParameterNode:
     """
@@ -13,5 +14,5 @@ class gamma_analysisParameterNode:
     inputImage - The 3-channel input image where markers will be detected and placed.
     """
 
-    dosymetryResultVolume: vtkMRMLScalarVolumeNode 
+    dosymetryResultVolume: vtkMRMLScalarVolumeNode
     rtDoseVolume: vtkMRMLScalarVolumeNode

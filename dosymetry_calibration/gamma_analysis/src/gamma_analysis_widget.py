@@ -64,8 +64,12 @@ class gamma_analysisWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.logic = gamma_analysisLogic()
 
         # These connections ensure that we update parameter node when scene is closed
-        self.addObserver(slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose)
-        self.addObserver(slicer.mrmlScene, slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
+        self.addObserver(
+            slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose
+        )
+        self.addObserver(
+            slicer.mrmlScene, slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose
+        )
 
         # Buttons
         self.ui.runButton.connect("clicked(bool)", self.onRunButton)
@@ -79,12 +83,13 @@ class gamma_analysisWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.settingsFormLayout = qt.QFormLayout(self.settingsCollapsibleButton)
 
         # Initialize the settings widget and add it to the collapsible button layout
-        self.settingsWidget = GammaAnalysisSettingsWidget(parentWidget=self.settingsCollapsibleButton)
+        self.settingsWidget = GammaAnalysisSettingsWidget(
+            parentWidget=self.settingsCollapsibleButton
+        )
         self.settingsFormLayout.addWidget(self.settingsWidget.widget)
         # Make sure parameter node is initialized (needed for module reload)
-        
-        self.initializeParameterNode()
 
+        self.initializeParameterNode()
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
@@ -101,7 +106,9 @@ class gamma_analysisWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         if self._parameterNode:
             self._parameterNode.disconnectGui(self._parameterNodeGuiTag)
             self._parameterNodeGuiTag = None
-            self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanRun)
+            self.removeObserver(
+                self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanRun
+            )
 
     def onSceneStartClose(self, caller, event) -> None:
         """Called just before the scene is closed."""
@@ -119,13 +126,9 @@ class gamma_analysisWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         self.setParameterNode(self.logic.getParameterNode())
 
-        # Select default input nodes if nothing is selected yet to save a few clicks for the user
-        # if not self._parameterNode.dosymetryResultVolume:
-        #     firstVolumeNode = slicer.mrmlScene.GetFirstNodeByClass("vtkMRMLScalarVolumeNode")
-        #     if firstVolumeNode:
-        #         self._parameterNode.dosymetryResult = firstVolumeNode
-
-    def setParameterNode(self, inputParameterNode: Optional[gamma_analysisParameterNode]) -> None:
+    def setParameterNode(
+        self, inputParameterNode: Optional[gamma_analysisParameterNode]
+    ) -> None:
         """
         Set and observe parameter node.
         Observation is needed because when the parameter node is changed then the GUI must be updated immediately.
@@ -133,78 +136,98 @@ class gamma_analysisWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         if self._parameterNode:
             self._parameterNode.disconnectGui(self._parameterNodeGuiTag)
-            self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanRun)
+            self.removeObserver(
+                self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanRun
+            )
         self._parameterNode = inputParameterNode
         if self._parameterNode:
             # Note: in the .ui file, a Qt dynamic property called "SlicerParameterName" is set on each
             # ui element that needs connection.
             self._parameterNodeGuiTag = self._parameterNode.connectGui(self.ui)
-            self.addObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanRun)
+            self.addObserver(
+                self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanRun
+            )
             self._checkCanRun()
 
     def _checkCanRun(self, caller=None, event=None) -> None:
-        if self._parameterNode and self._parameterNode.dosymetryResultVolume is not None and self._parameterNode.rtDoseVolume is not None:
+        if (
+            self._parameterNode
+            and self._parameterNode.dosymetryResultVolume is not None
+            and self._parameterNode.rtDoseVolume is not None
+        ):
             self.ui.runButton.toolTip = _("Compute gamma index")
             self.ui.runButton.enabled = True
         else:
             self.ui.runButton.toolTip = _("Select reference and evaluated volume nodes")
             self.ui.runButton.enabled = False
 
-    
     def __onRunButtonCheck(self):
         errors = []
-        if self.ui.rtPlanFileSelector.currentPath == '':
-            errors.append('Did not set RT Plan File!')
-        # if self.ui.outputSelector.currentPath == '':
-        #     errors.append('Did not set output directory!')
-        # if 'sample' not in self.roi_nodes:
-        #     errors.append('Sample was not detected!')
-        # if 'control' in self.roi_nodes and self.ui.controlStripeDose.text == '':
-        #     errors.append('Did not set control stripe dose!')
-        # if 'control' in self.roi_nodes and not isFloat(self.ui.controlStripeDose.text):
-        #     errors.append('Control stripe dose in not a number!')
-        # if 'recalibration' in self.roi_nodes and self.ui.recalibrationStripeDose.text == '':
-        #     errors.append('Did not set recalibration stripe dose!')
-        # if 'recalibration' in self.roi_nodes and not isFloat(self.ui.recalibrationStripeDose.text):
-        #     errors.append('Recalibration stripe dose in not a number!')
+        if self.ui.rtPlanFileSelector.currentPath == "":
+            errors.append("Did not set RT Plan File!")
         return errors
 
     def onRunButton(self) -> None:
         errors = self.__onRunButtonCheck()
-        
+
         try:
             advancedSettings = self.settingsWidget.getData()
         except ValueError as e:
             errors.append(e.args[0])
-            
-        if self._parameterNode is None or self._parameterNode.dosymetryResultVolume is None or self._parameterNode.rtDoseVolume is None:
+
+        if (
+            self._parameterNode is None
+            or self._parameterNode.dosymetryResultVolume is None
+            or self._parameterNode.rtDoseVolume is None
+        ):
             errors.append("Select reference and evaluated volume nodes")
-            
+
         if len(errors) > 0:
-            slicer.util.errorDisplay('\n'.join(errors))
+            slicer.util.errorDisplay("\n".join(errors))
             return
 
-        with slicer.util.tryWithErrorDisplay(_("Failed to compute results."), waitCursor=True):
-            dose = advancedSettings['dose']
-            dose_threshold = advancedSettings['dose_threshold']
-            dta = advancedSettings['dta']
-            GPR, gammaImage, alignedRtDose = self.logic.runGammaAnalysis(self._parameterNode.dosymetryResultVolume, self._parameterNode.rtDoseVolume, self.ui.rtPlanFileSelector.currentPath, dose, dose_threshold, dta)
+        with slicer.util.tryWithErrorDisplay(
+            _("Failed to compute results."), waitCursor=True
+        ):
+            dose = advancedSettings["dose"]
+            dose_threshold = advancedSettings["dose_threshold"]
+            dta = advancedSettings["dta"]
+            GPR, gammaImage, alignedRtDose = self.logic.runGammaAnalysis(
+                self._parameterNode.dosymetryResultVolume,
+                self._parameterNode.rtDoseVolume,
+                self.ui.rtPlanFileSelector.currentPath,
+                dose,
+                dose_threshold,
+                dta,
+            )
 
-            nodeName = 'RegisteredTPSDose'
-            registeredDose = self.__get_or_create_node(nodeName, "vtkMRMLScalarVolumeNode")
+            nodeName = "RegisteredTPSDose"
+            registeredDose = self.__get_or_create_node(
+                nodeName, "vtkMRMLScalarVolumeNode"
+            )
             slicer.util.updateVolumeFromArray(registeredDose, alignedRtDose)
-            registeredDose.SetOrigin(self._parameterNode.dosymetryResultVolume.GetOrigin())
-            registeredDose.SetSpacing(self._parameterNode.dosymetryResultVolume.GetSpacing())
+            registeredDose.SetOrigin(
+                self._parameterNode.dosymetryResultVolume.GetOrigin()
+            )
+            registeredDose.SetSpacing(
+                self._parameterNode.dosymetryResultVolume.GetSpacing()
+            )
 
-            nodeName = 'GammaImage'
-            gammaCroppedVolume = self.__get_or_create_node(nodeName, "vtkMRMLScalarVolumeNode")
+            nodeName = "GammaImage"
+            gammaCroppedVolume = self.__get_or_create_node(
+                nodeName, "vtkMRMLScalarVolumeNode"
+            )
             slicer.util.updateVolumeFromArray(gammaCroppedVolume, gammaImage)
-            gammaCroppedVolume.SetOrigin(self._parameterNode.dosymetryResultVolume.GetOrigin())
-            gammaCroppedVolume.SetSpacing(self._parameterNode.dosymetryResultVolume.GetSpacing())
+            gammaCroppedVolume.SetOrigin(
+                self._parameterNode.dosymetryResultVolume.GetOrigin()
+            )
+            gammaCroppedVolume.SetSpacing(
+                self._parameterNode.dosymetryResultVolume.GetSpacing()
+            )
 
             # CImg(alignedRtDose).display('registered TPS dose')
             # CImg(gammaImage).display('gamma image')
-            self.ui.gammaLineEdit.text = f'{GPR:.2f}'
+            self.ui.gammaLineEdit.text = f"{GPR:.2f}"
 
     def __get_or_create_node(self, nodeName, nodeClass):
         existingNode = slicer.mrmlScene.GetFirstNodeByName(nodeName)

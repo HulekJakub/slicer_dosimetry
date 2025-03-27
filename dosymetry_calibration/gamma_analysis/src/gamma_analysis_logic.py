@@ -9,15 +9,16 @@ from slicer import vtkMRMLVectorVolumeNode, vtkMRMLScalarVolumeNode
 
 import slicer.util
 from src.gamma_analysis_parameter_node import gamma_analysisParameterNode
+
 # gamma_analysisLogic
 #
 import numpy as np
 import subprocess
 import SimpleITK as sitk
-from pycimg import CImg
 import pydicom
 import vtk
 import pymedphys
+
 
 class gamma_analysisLogic(ScriptedLoadableModuleLogic):
     """This class should implement all the actual
@@ -36,23 +37,27 @@ class gamma_analysisLogic(ScriptedLoadableModuleLogic):
     def getParameterNode(self):
         return gamma_analysisParameterNode(super().getParameterNode())
 
-    def runGammaAnalysis(self, dosymetryResultVolume: vtkMRMLScalarVolumeNode, rtDoseVolume: vtkMRMLScalarVolumeNode, rtPlanFilepath: str, dose, dose_threshold, dta):
+    def runGammaAnalysis(
+        self,
+        dosymetryResultVolume: vtkMRMLScalarVolumeNode,
+        rtDoseVolume: vtkMRMLScalarVolumeNode,
+        rtPlanFilepath: str,
+        dose,
+        dose_threshold,
+        dta,
+    ):
         import time
 
         startTime = time.time()
         logging.info(f"Processing started")
-        
-        # workDir = os.path.join(os.path.dirname(__file__), '..')
-        # tempDir = os.path.join(workDir, 'temp')
-        # os.makedirs(tempDir, exist_ok=True)
-        
+
         rtDoseFileName = rtDoseVolume.GetStorageNode().GetFileName()
         rtDoseDicom = pydicom.dcmread(rtDoseFileName, force=True)
         scaling = float(rtDoseDicom.DoseGridScaling)
 
-        rtDose = slicer.util.arrayFromVolume(rtDoseVolume) * scaling * 100
+        rtDose = slicer.util.arrayFromVolume(rtDoseVolume) * scaling * 100 # change Gy to cGy
         dosymetryResult = slicer.util.arrayFromVolume(dosymetryResultVolume)[0]
-        dosymetryResult = dosymetryResult.astype('float64')
+        dosymetryResult = dosymetryResult.astype("float64")
         spacing = dosymetryResultVolume.GetSpacing()
 
         rtPlanDicom = pydicom.dcmread(rtPlanFilepath, force=True)
@@ -69,44 +74,51 @@ class gamma_analysisLogic(ScriptedLoadableModuleLogic):
         alignedRtDoseImage = self.__affine_registration(fixed, moving)
         alignedRtDose = sitk.GetArrayFromImage(alignedRtDoseImage)
 
-        gammaImage = self.__calculate_gamma_index(alignedRtDose, dosymetryResult, spacing, dose, dta, dose_threshold)
+        gammaImage = self.__calculate_gamma_index(
+            alignedRtDose, dosymetryResult, spacing, dose, dta, dose_threshold
+        )
 
-        GPR = (1.0 - len(np.where(gammaImage>=1.0)[0])/np.prod(gammaImage.shape))*100
+        GPR = (
+            1.0 - len(np.where(gammaImage >= 1.0)[0]) / np.prod(gammaImage.shape)
+        ) * 100
 
-        # shutil.rmtree(tempDir)
         stopTime = time.time()
         logging.info(f"Processing completed in {stopTime-startTime:.2f} seconds")
-        
+
         return GPR, gammaImage, alignedRtDose
-        
-    
+
     def __getIJKCoordinates1(self, X, Y, Z, volumeNode):
         # https://slicer.readthedocs.io/en/latest/developer_guide/script_repository/volumes.html "Get volume voxel coordinates from markup control point RAS coordinates"
-        point_Ras = [X,Y,Z]
+        point_Ras = [X, Y, Z]
 
         transformRasToVolumeRas = vtk.vtkGeneralTransform()
-        slicer.vtkMRMLTransformNode.GetTransformBetweenNodes(None, volumeNode.GetParentTransformNode(), transformRasToVolumeRas)
+        slicer.vtkMRMLTransformNode.GetTransformBetweenNodes(
+            None, volumeNode.GetParentTransformNode(), transformRasToVolumeRas
+        )
         point_VolumeRas = transformRasToVolumeRas.TransformPoint(point_Ras)
 
         # Get voxel coordinates from physical coordinates
         volumeRasToIjk = vtk.vtkMatrix4x4()
         volumeNode.GetRASToIJKMatrix(volumeRasToIjk)
         point_Ijk = [0, 0, 0, 1]
-        volumeRasToIjk.MultiplyPoint(np.append(point_VolumeRas,1.0), point_Ijk)
-        point_Ijk = [ int(round(c)) for c in point_Ijk[0:3] ]    
+        volumeRasToIjk.MultiplyPoint(np.append(point_VolumeRas, 1.0), point_Ijk)
+        point_Ijk = [int(round(c)) for c in point_Ijk[0:3]]
 
         return point_Ijk
 
     def __affine_registration(self, fixed, moving):
         R = sitk.ImageRegistrationMethod()
         R.SetMetricAsCorrelation()
-        R.SetOptimizerAsRegularStepGradientDescent(learningRate=2.0,
-                                                minStep=1e-12,
-                                                numberOfIterations=1000,
-                                                gradientMagnitudeTolerance=1e-8)
+        R.SetOptimizerAsRegularStepGradientDescent(
+            learningRate=2.0,
+            minStep=1e-12,
+            numberOfIterations=1000,
+            gradientMagnitudeTolerance=1e-8,
+        )
         R.SetOptimizerScalesFromIndexShift()
-        tx = sitk.CenteredTransformInitializer(fixed, moving,
-                                            sitk.Similarity2DTransform())
+        tx = sitk.CenteredTransformInitializer(
+            fixed, moving, sitk.Similarity2DTransform()
+        )
         R.SetInitialTransform(tx)
         R.SetInterpolator(sitk.sitkLinear)
 
@@ -122,15 +134,33 @@ class gamma_analysisLogic(ScriptedLoadableModuleLogic):
 
         return out
 
-            
-    def __calculate_gamma_index(self, alignedRtDose, dosymetryResult, spacing, dose, dta, dose_threshold, max_gamma=2.0, interp_fraction=5) -> np.ndarray:
+    def __calculate_gamma_index(
+        self,
+        alignedRtDose,
+        dosymetryResult,
+        spacing,
+        dose,
+        dta,
+        dose_threshold,
+        max_gamma=2.0,
+        interp_fraction=5,
+    ) -> np.ndarray:
 
         gridx = np.arange(alignedRtDose.shape[0]) * abs(spacing[0])
         gridy = np.arange(alignedRtDose.shape[1]) * abs(spacing[1])
         grid = (gridx, gridy)
-        
-        gamma = pymedphys.gamma(grid, alignedRtDose, grid, dosymetryResult, dose, dta, max_gamma=max_gamma, interp_fraction=interp_fraction, lower_percent_dose_cutoff=dose_threshold)
+
+        gamma = pymedphys.gamma(
+            grid,
+            alignedRtDose,
+            grid,
+            dosymetryResult,
+            dose,
+            dta,
+            max_gamma=max_gamma,
+            interp_fraction=interp_fraction,
+            lower_percent_dose_cutoff=dose_threshold,
+        )
         gamma = np.nan_to_num(gamma, nan=0)
 
         return gamma
-

@@ -57,12 +57,18 @@ class film_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # Connections
 
         # These connections ensure that we update parameter node when scene is closed
-        self.addObserver(slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose)
-        self.addObserver(slicer.mrmlScene, slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
+        self.addObserver(
+            slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose
+        )
+        self.addObserver(
+            slicer.mrmlScene, slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose
+        )
 
         # Buttons
         self.ui.detectStripesButton.connect("clicked(bool)", self.onDetectStripesButton)
-        self.ui.generateCalibrationButton.connect("clicked(bool)", self.onGenerateCalibration)
+        self.ui.generateCalibrationButton.connect(
+            "clicked(bool)", self.onGenerateCalibration
+        )
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
@@ -82,8 +88,16 @@ class film_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         if self._parameterNode:
             self._parameterNode.disconnectGui(self._parameterNodeGuiTag)
             self._parameterNodeGuiTag = None
-            self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanDetectStripes)
-            self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanGenerateCalibration)
+            self.removeObserver(
+                self._parameterNode,
+                vtk.vtkCommand.ModifiedEvent,
+                self._checkCanDetectStripes,
+            )
+            self.removeObserver(
+                self._parameterNode,
+                vtk.vtkCommand.ModifiedEvent,
+                self._checkCanGenerateCalibration,
+            )
 
     def onSceneStartClose(self, caller, event) -> None:
         """Called just before the scene is closed."""
@@ -105,11 +119,15 @@ class film_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         # Select default input nodes if nothing is selected yet to save a few clicks for the user
         if not self._parameterNode.inputImage:
-            firstVolumeNode = slicer.mrmlScene.GetFirstNodeByClass("vtkMRMLVectorVolumeNode")
+            firstVolumeNode = slicer.mrmlScene.GetFirstNodeByClass(
+                "vtkMRMLVectorVolumeNode"
+            )
             if firstVolumeNode:
                 self._parameterNode.inputImage = firstVolumeNode
 
-    def setParameterNode(self, inputParameterNode: Optional[film_calibrationParameterNode]) -> None:
+    def setParameterNode(
+        self, inputParameterNode: Optional[film_calibrationParameterNode]
+    ) -> None:
         """
         Set and observe parameter node.
         Observation is needed because when the parameter node is changed then the GUI must be updated immediately.
@@ -117,27 +135,44 @@ class film_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         if self._parameterNode:
             self._parameterNode.disconnectGui(self._parameterNodeGuiTag)
-            self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanDetectStripes)
-            self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanGenerateCalibration)
+            self.removeObserver(
+                self._parameterNode,
+                vtk.vtkCommand.ModifiedEvent,
+                self._checkCanDetectStripes,
+            )
+            self.removeObserver(
+                self._parameterNode,
+                vtk.vtkCommand.ModifiedEvent,
+                self._checkCanGenerateCalibration,
+            )
         self._parameterNode = inputParameterNode
         if self._parameterNode:
             # Note: in the .ui file, a Qt dynamic property called "SlicerParameterName" is set on each
             # ui element that needs connection.
             self._parameterNodeGuiTag = self._parameterNode.connectGui(self.ui)
-            self.addObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanDetectStripes)
-            self.addObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanGenerateCalibration)
+            self.addObserver(
+                self._parameterNode,
+                vtk.vtkCommand.ModifiedEvent,
+                self._checkCanDetectStripes,
+            )
+            self.addObserver(
+                self._parameterNode,
+                vtk.vtkCommand.ModifiedEvent,
+                self._checkCanGenerateCalibration,
+            )
             self._checkCanDetectStripes()
             self._checkCanGenerateCalibration()
-
 
     def _checkCanDetectStripes(self, caller=None, event=None) -> None:
         if self._parameterNode and self._parameterNode.inputImage is not None:
             self.ui.detectStripesButton.toolTip = _("Detect stripes")
             self.ui.detectStripesButton.enabled = True
         else:
-            self.ui.detectStripesButton.toolTip = _("Select input volume and calibration file path")
+            self.ui.detectStripesButton.toolTip = _(
+                "Select input volume and calibration file path"
+            )
             self.ui.detectStripesButton.enabled = False
-    
+
     def _checkCanGenerateCalibration(self, caller=None, event=None) -> None:
         if not self.stripesDetected:
             self.ui.generateCalibrationButton.toolTip = _("First detect stripes!")
@@ -148,18 +183,23 @@ class film_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     def onDetectStripesButton(self) -> None:
         """Run processing when user clicks "DetectStripes" button."""
-        if self.ui.calibrationFileSelector.currentPath == '':
-            slicer.util.errorDisplay('Did not find calibration file!')
+        if self.ui.calibrationFileSelector.currentPath == "":
+            slicer.util.errorDisplay("Did not find calibration file!")
             return
-        with slicer.util.tryWithErrorDisplay(_("Failed to compute results."), waitCursor=True):
-            centers = self.logic.detectStripes(self.ui.inputImageSelector.currentNode(), self.ui.calibrationFileSelector.currentPath)
+        with slicer.util.tryWithErrorDisplay(
+            _("Failed to compute results."), waitCursor=True
+        ):
+            centers = self.logic.detectStripes(
+                self.ui.inputImageSelector.currentNode(),
+                self.ui.calibrationFileSelector.currentPath,
+            )
             self.centers = centers
             self.create_markups(centers)
             self.stripesDetected = True
             self._checkCanGenerateCalibration()
-            
+
     def create_markups(self, centers):
-        volume_node = self.ui.inputImageSelector.currentNode()  
+        volume_node = self.ui.inputImageSelector.currentNode()
         image_spacing = volume_node.GetSpacing()  # Get the spacing (x, y, z)
         image_origin = volume_node.GetOrigin()  # Get the origin (x, y, z)
         image_origin = (0.0, 0.0, 0.0)
@@ -167,49 +207,56 @@ class film_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         for node in self.roi_nodes.values():
             slicer.mrmlScene.RemoveNode(node)
         self.roi_nodes = {}
-        
-        size = self.ui.roiSize.value # Size in mm
+
+        size = self.ui.roiSize.value  # Size in mm
         for key, point in centers.items():
-            x_ras, y_ras, z_ras = self.__point2d_to_ras([point['x'], point['y']], image_origin, image_spacing)
-            
+            x_ras, y_ras, z_ras = self.__point2d_to_ras(
+                [point["x"], point["y"]], image_origin, image_spacing
+            )
+
             roi_node = self.__create_roi_node(x_ras, y_ras, z_ras, size, key)
             self.roi_nodes[key] = roi_node
 
     def onGenerateCalibration(self):
-        if self.ui.calibrationFileSelector.currentPath == '':
-            slicer.util.errorDisplay('Did not set calibration file!')
+        if self.ui.calibrationFileSelector.currentPath == "":
+            slicer.util.errorDisplay("Did not set calibration file!")
             return
-        if self.ui.calibrationOutputSelector.currentPath == '':
-            slicer.util.errorDisplay('Did not set calibration output directory!')
+        if self.ui.calibrationOutputSelector.currentPath == "":
+            slicer.util.errorDisplay("Did not set calibration output directory!")
             return
-        with slicer.util.tryWithErrorDisplay(_("Failed to compute results."), waitCursor=True):
+        with slicer.util.tryWithErrorDisplay(
+            _("Failed to compute results."), waitCursor=True
+        ):
             volume_node = self.ui.inputImageSelector.currentNode()
-            interpolation_parameters = self.logic.create_calibration(volume_node, self.roi_nodes, self.ui.calibrationFileSelector.currentPath, self.ui.calibrationOutputSelector.currentPath)
+            interpolation_parameters = self.logic.create_calibration(
+                volume_node,
+                self.roi_nodes,
+                self.ui.calibrationFileSelector.currentPath,
+                self.ui.calibrationOutputSelector.currentPath,
+            )
             logging.info(interpolation_parameters)
-                
-            plot_path = os.path.join(self.ui.calibrationOutputSelector.currentPath, 'calibration_plot.png')
+
+            plot_path = os.path.join(
+                self.ui.calibrationOutputSelector.currentPath, "calibration_plot.png"
+            )
             for node in self.roi_nodes.values():
                 slicer.mrmlScene.RemoveNode(node)
             self.roi_nodes = {}
-            slicer.util.loadVolume(plot_path, properties={'show': True})
+            slicer.util.loadVolume(plot_path, properties={"show": True})
 
-        
     def __point2d_to_ras(self, point, image_origin, image_spacing):
-        row, col = point[1], point[0]  # row and col represent image indices
+        row, col = point[1], point[0]
         value = 0
-        # Convert from image coordinates (row, col, value) to RAS coordinates
-        x_ras = image_origin[0] - col * image_spacing[0]  # Convert column index to real world x
-        y_ras = image_origin[1] - row * image_spacing[1]  # Convert row index to real world y
-        z_ras = image_origin[2] - value * image_spacing[2]  # Convert value index to real world z
-        
+        x_ras = image_origin[0] - col * image_spacing[0]
+        y_ras = image_origin[1] - row * image_spacing[1]
+        z_ras = image_origin[2] - value * image_spacing[2]
         return x_ras, y_ras, z_ras
 
     def __create_roi_node(self, x_ras, y_ras, z_ras, size, name):
         roi_node = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsROINode")
 
-        roi_node.SetXYZ(x_ras, y_ras, z_ras)  # Set center in RAS
+        roi_node.SetXYZ(x_ras, y_ras, z_ras)
         roi_node.SetSize(size, size, size)
 
         roi_node.SetName(f"{name}")
         return roi_node
-    

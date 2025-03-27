@@ -5,6 +5,7 @@ from slicer.parameterNodeWrapper import parameterNodeWrapper
 
 from slicer import vtkMRMLVectorVolumeNode
 
+
 @parameterNodeWrapper
 class dosymetryParameterNode:
     """
@@ -14,5 +15,4 @@ class dosymetryParameterNode:
     calibrationFilePath - A .txt file containing additional marker-related data or configurations.
     """
 
-    inputImage: vtkMRMLVectorVolumeNode  # 3-channel input image
-
+    inputImage: vtkMRMLVectorVolumeNode
