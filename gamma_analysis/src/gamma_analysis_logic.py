@@ -55,7 +55,9 @@ class gamma_analysisLogic(ScriptedLoadableModuleLogic):
         rtDoseDicom = pydicom.dcmread(rtDoseFileName, force=True)
         scaling = float(rtDoseDicom.DoseGridScaling)
 
-        rtDose = slicer.util.arrayFromVolume(rtDoseVolume) * scaling * 100 # change Gy to cGy
+        rtDose = (
+            slicer.util.arrayFromVolume(rtDoseVolume) * scaling * 100
+        )  # change Gy to cGy
         dosymetryResult = slicer.util.arrayFromVolume(dosymetryResultVolume)[0]
         dosymetryResult = dosymetryResult.astype("float64")
         spacing = dosymetryResultVolume.GetSpacing()

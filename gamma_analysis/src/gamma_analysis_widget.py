@@ -212,19 +212,19 @@ class gamma_analysisWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             registeredDose.SetSpacing(
                 self._parameterNode.dosymetryResultVolume.GetSpacing()
             )
-            
+
             nodeName = "GammaImage"
-            gammaVolume = self.__get_or_create_node(
-                nodeName, "vtkMRMLScalarVolumeNode"
-            )
+            gammaVolume = self.__get_or_create_node(nodeName, "vtkMRMLScalarVolumeNode")
             slicer.util.updateVolumeFromArray(gammaVolume, gammaImage)
-            gammaVolume.SetOrigin(
-                self._parameterNode.dosymetryResultVolume.GetOrigin()
-            )
+            gammaVolume.SetOrigin(self._parameterNode.dosymetryResultVolume.GetOrigin())
             gammaVolume.SetSpacing(
                 self._parameterNode.dosymetryResultVolume.GetSpacing()
             )
-            slicer.app.layoutManager().sliceWidget("Red").sliceLogic().GetSliceCompositeNode().SetBackgroundVolumeID(gammaVolume.GetID())
+            slicer.app.layoutManager().sliceWidget(
+                "Red"
+            ).sliceLogic().GetSliceCompositeNode().SetBackgroundVolumeID(
+                gammaVolume.GetID()
+            )
             sliceLogics = slicer.app.layoutManager().mrmlSliceLogics()
             for i in range(sliceLogics.GetNumberOfItems()):
                 sliceLogic = sliceLogics.GetItemAsObject(i)

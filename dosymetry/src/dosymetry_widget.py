@@ -240,18 +240,20 @@ class dosymetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         with slicer.util.tryWithErrorDisplay(
             _("Failed to compute results."), waitCursor=True
         ):
+            self.ui.controlResult.visible = False
+            self.ui.recalibrationResult.visible = False
             self.ui.progressBar.setValue(0)
             self.ui.progressBar.visible = True
             progressUpdateCallback = lambda x: self.monitor.setProgressValue.emit(
                 int(x * 100)
             )
             input_volume_node = self.ui.inputImageSelector.currentNode()
-            
+
             control_dose, recalibration_dose = None, None
             if "recalibration" in self.roi_nodes and "control" in self.roi_nodes:
                 control_dose = float(self.ui.controlStripeDose.text)
                 recalibration_dose = float(self.ui.recalibrationStripeDose.text)
-                
+
             (
                 calibrated_image,
                 control_mean,
@@ -268,7 +270,6 @@ class dosymetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 recalibration_dose,
                 progressUpdate=progressUpdateCallback,
             )
-
 
             for node in self.roi_nodes.values():
                 slicer.mrmlScene.RemoveNode(node)
