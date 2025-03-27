@@ -4,12 +4,12 @@ project(Dosymetry)
 
 #-----------------------------------------------------------------------------
 # Extension meta-information
-set(EXTENSION_HOMEPAGE "https://www.slicer.org/wiki/Documentation/Nightly/Extensions/dosymetry_calibration")
+set(EXTENSION_HOMEPAGE "https://www.slicer.org/wiki/Documentation/Nightly/Extensions/dosymetry")
 set(EXTENSION_CATEGORY "Dosymetry")
-set(EXTENSION_CONTRIBUTORS "John Doe (AnyWare Corp.)")
-set(EXTENSION_DESCRIPTION "This is an example of a simple extension")
-set(EXTENSION_ICONURL "https://www.example.com/Slicer/Extensions/dosymetry_calibration.png")
-set(EXTENSION_SCREENSHOTURLS "https://www.example.com/Slicer/Extensions/dosymetry_calibration/Screenshots/1.png")
+set(EXTENSION_CONTRIBUTORS "Jakub Hulek (AGH University of Krakow)")
+set(EXTENSION_DESCRIPTION "This extension was created for radiology experts to calibrate their equipement and plan treatment using raditation-sensitive stripes.")
+set(EXTENSION_ICONURL "https://www.example.com/Slicer/Extensions/dosymetry.png")
+set(EXTENSION_SCREENSHOTURLS "https://www.example.com/Slicer/Extensions/dosymetry/Screenshots/1.png")
 set(EXTENSION_DEPENDS "NA") # Specified as a list or "NA" if no dependencies
 
 #-----------------------------------------------------------------------------
