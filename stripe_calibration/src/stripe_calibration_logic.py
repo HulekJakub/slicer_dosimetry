@@ -10,10 +10,10 @@ from slicer import vtkMRMLVectorVolumeNode
 from src.marker_detection import markers_detection
 
 import slicer.util
-from src.film_calibration_parameter_node import film_calibrationParameterNode
+from src.stripe_calibration_parameter_node import stripe_calibrationParameterNode
 
 #
-# film_calibrationLogic
+# stripe_calibrationLogic
 #
 
 import numpy as np
@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
 
-class film_calibrationLogic(ScriptedLoadableModuleLogic):
+class stripe_calibrationLogic(ScriptedLoadableModuleLogic):
     """This class should implement all the actual
     computation done by your module.  The interface
     should be such that other python code can import
@@ -36,7 +36,7 @@ class film_calibrationLogic(ScriptedLoadableModuleLogic):
         ScriptedLoadableModuleLogic.__init__(self)
 
     def getParameterNode(self):
-        return film_calibrationParameterNode(super().getParameterNode())
+        return stripe_calibrationParameterNode(super().getParameterNode())
 
     def detectStripes(
         self, inputImage: vtkMRMLVectorVolumeNode, calibrationFilePath: str

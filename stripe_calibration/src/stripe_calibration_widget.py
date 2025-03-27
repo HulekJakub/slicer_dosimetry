@@ -12,15 +12,15 @@ from slicer.util import VTKObservationMixin
 
 from slicer import vtkMRMLVectorVolumeNode
 
-from src.film_calibration_logic import film_calibrationLogic
-from src.film_calibration_parameter_node import film_calibrationParameterNode
+from src.stripe_calibration_logic import stripe_calibrationLogic
+from src.stripe_calibration_parameter_node import stripe_calibrationParameterNode
 
 #
-# film_calibrationWidget
+# stripe_calibrationWidget
 #
 
 
-class film_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
+class stripe_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     """Uses ScriptedLoadableModuleWidget base class, available at:
     https://github.com/Slicer/Slicer/blob/main/Base/Python/slicer/ScriptedLoadableModule.py
     """
@@ -29,8 +29,8 @@ class film_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.__init__(self, parent)
         VTKObservationMixin.__init__(self)  # needed for parameter node observation
-        self.logic: Optional[film_calibrationLogic] = None
-        self._parameterNode: Optional[film_calibrationParameterNode] = None
+        self.logic: Optional[stripe_calibrationLogic] = None
+        self._parameterNode: Optional[stripe_calibrationParameterNode] = None
         self._parameterNodeGuiTag = None
         self.stripesDetected = False
         self.roi_nodes = {}
@@ -41,7 +41,7 @@ class film_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         # Load widget from .ui file (created by Qt Designer).
         # Additional widgets can be instantiated manually and added to self.layout.
-        uiWidget = slicer.util.loadUI(self.resourcePath("UI/film_calibration.ui"))
+        uiWidget = slicer.util.loadUI(self.resourcePath("UI/stripe_calibration.ui"))
         self.layout.addWidget(uiWidget)
         self.ui = slicer.util.childWidgetVariables(uiWidget)
 
@@ -52,7 +52,7 @@ class film_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         # Create logic class. Logic implements all computations that should be possible to run
         # in batch mode, without a graphical user interface.
-        self.logic = film_calibrationLogic()
+        self.logic = stripe_calibrationLogic()
 
         # Connections
 
@@ -126,7 +126,7 @@ class film_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 self._parameterNode.inputImage = firstVolumeNode
 
     def setParameterNode(
-        self, inputParameterNode: Optional[film_calibrationParameterNode]
+        self, inputParameterNode: Optional[stripe_calibrationParameterNode]
     ) -> None:
         """
         Set and observe parameter node.

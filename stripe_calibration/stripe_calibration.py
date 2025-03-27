@@ -21,16 +21,16 @@ from slicer import vtkMRMLVectorVolumeNode
     Imports for compatibility with Slicer
 """
 # from Testing.Python.example_test import *
-from src.film_calibration_logic import *
-from src.film_calibration_parameter_node import *
-from src.film_calibration_widget import *
+from src.stripe_calibration_logic import *
+from src.stripe_calibration_parameter_node import *
+from src.stripe_calibration_widget import *
 
 #
-# film_calibration
+# stripe_calibration
 #
 
 
-class film_calibration(ScriptedLoadableModule):
+class stripe_calibration(ScriptedLoadableModule):
     """Uses ScriptedLoadableModule base class, available at:
     https://github.com/Slicer/Slicer/blob/main/Base/Python/slicer/ScriptedLoadableModule.py
     """
@@ -38,7 +38,7 @@ class film_calibration(ScriptedLoadableModule):
     def __init__(self, parent):
         ScriptedLoadableModule.__init__(self, parent)
         self.parent.title = _(
-            "Film Calibration"
+            "Stripe Calibration"
         )  # TODO: make this more human readable by adding spaces
         # TODO: set categories (folders where the module shows up in the module selector)
         self.parent.categories = [translate("qSlicerAbstractCoreModule", "Dosymetry")]
@@ -73,7 +73,7 @@ def registerSampleData():
     pass
 
 
-class film_calibrationTest(ScriptedLoadableModuleTest):
+class stripe_calibrationTest(ScriptedLoadableModuleTest):
 
     def setUp(self):
         pass
@@ -81,8 +81,8 @@ class film_calibrationTest(ScriptedLoadableModuleTest):
     def runTest(self):
         """Run as few or as many tests as needed here."""
         self.setUp()
-        self.test_film_calibration()
+        self.test_stripe_calibration()
 
-    def test_film_calibration(self):
+    def test_stripe_calibration(self):
         self.delayDisplay("Starting the mock test")
         self.delayDisplay("Mock test passed")

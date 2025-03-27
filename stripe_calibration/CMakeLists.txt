@@ -1,12 +1,12 @@
 #-----------------------------------------------------------------------------
-set(MODULE_NAME FilmCalibration)
+set(MODULE_NAME StripeCalibration)
 
 #-----------------------------------------------------------------------------
 set(MODULE_PYTHON_SCRIPTS
   ${MODULE_NAME}.py
-  src/film_calibration_logic.py
-  src/film_calibration_parameter_node.py
-  src/film_calibration_widget.py
+  src/stripe_calibration_logic.py
+  src/stripe_calibration_parameter_node.py
+  src/stripe_calibration_widget.py
   src/imports.py
   src/marker_detection.py
   Testing/Python/example_test.py

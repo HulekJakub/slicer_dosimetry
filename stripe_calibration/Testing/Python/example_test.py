@@ -3,12 +3,12 @@ import imports
 from slicer.ScriptedLoadableModule import *
 
 
-from film_calibration import registerSampleData
-from src.film_calibration_logic import film_calibrationLogic
+from stripe_calibration import registerSampleData
+from src.stripe_calibration_logic import stripe_calibrationLogic
 
 
 #
-# film_calibrationTest
+# stripe_calibrationTest
 #
 
 
@@ -26,10 +26,10 @@ class example_testTest1(ScriptedLoadableModuleTest):
     def runTest(self):
         """Run as few or as many tests as needed here."""
         self.setUp()
-        self.test_film_calibration1()
-        self.test_film_calibration2()
+        self.test_stripe_calibration1()
+        self.test_stripe_calibration2()
 
-    def test_film_calibration1(self):
+    def test_stripe_calibration1(self):
         """Ideally you should have several levels of tests.  At the lowest level
         tests should exercise the functionality of the logic with different inputs
         (both valid and invalid).  At higher levels your tests should emulate the
@@ -48,7 +48,7 @@ class example_testTest1(ScriptedLoadableModuleTest):
         # import SampleData
 
         # registerSampleData()
-        # inputVolume = SampleData.downloadSample("film_calibration1")
+        # inputVolume = SampleData.downloadSample("stripe_calibration1")
         # self.delayDisplay("Loaded test data set")
 
         # inputScalarRange = inputVolume.GetImageData().GetScalarRange()
@@ -60,7 +60,7 @@ class example_testTest1(ScriptedLoadableModuleTest):
 
         # # Test the module logic
 
-        # logic = film_calibrationLogic()
+        # logic = stripe_calibrationLogic()
 
         # # Test algorithm with non-inverted threshold
         # logic.process(inputVolume, outputVolume, threshold, True)
@@ -76,7 +76,7 @@ class example_testTest1(ScriptedLoadableModuleTest):
 
         self.delayDisplay("Test passed")
 
-    def test_film_calibration2(self):
+    def test_stripe_calibration2(self):
 
         self.assertEqual(1, 0 + 1)
 

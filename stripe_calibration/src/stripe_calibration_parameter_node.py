@@ -5,7 +5,7 @@ from slicer import vtkMRMLVectorVolumeNode
 
 
 @parameterNodeWrapper
-class film_calibrationParameterNode:
+class stripe_calibrationParameterNode:
     """
     The parameters needed by the module.
 

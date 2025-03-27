@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>film_calibration</class>
- <widget class="qMRMLWidget" name="film_calibration">
+ <class>stripe_calibration</class>
+ <widget class="qMRMLWidget" name="stripe_calibration">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -212,7 +212,7 @@ p, li { white-space: pre-wrap; }
  <resources/>
  <connections>
   <connection>
-   <sender>film_calibration</sender>
+   <sender>stripe_calibration</sender>
    <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
    <receiver>inputImageSelector</receiver>
    <slot>setMRMLScene(vtkMRMLScene*)</slot>
