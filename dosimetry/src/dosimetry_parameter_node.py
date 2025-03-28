@@ -7,7 +7,7 @@ from slicer import vtkMRMLVectorVolumeNode
 
 
 @parameterNodeWrapper
-class dosymetryParameterNode:
+class dosimetryParameterNode:
     """
     The parameters needed by the module.
 

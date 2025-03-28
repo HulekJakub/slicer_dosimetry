@@ -55,7 +55,7 @@ class stripe_calibration(ScriptedLoadableModule):
             "Stripe Calibration"
         )  # TODO: make this more human readable by adding spaces
         # TODO: set categories (folders where the module shows up in the module selector)
-        self.parent.categories = [translate("qSlicerAbstractCoreModule", "Dosymetry")]
+        self.parent.categories = [translate("qSlicerAbstractCoreModule", "Dosimetry")]
         self.parent.dependencies = (
             []
         )  # TODO: add here list of module names that this module requires

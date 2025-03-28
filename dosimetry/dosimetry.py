@@ -37,16 +37,16 @@ except ModuleNotFoundError:
     Imports for compatibility with Slicer
 """
 # from Testing.Python.example_test import *
-from src.dosymetry_logic import *
-from src.dosymetry_parameter_node import *
-from src.dosymetry_widget import *
+from src.dosimetry_logic import *
+from src.dosimetry_parameter_node import *
+from src.dosimetry_widget import *
 
 #
-# dosymetry
+# dosimetry
 #
 
 
-class dosymetry(ScriptedLoadableModule):
+class dosimetry(ScriptedLoadableModule):
     """Uses ScriptedLoadableModule base class, available at:
     https://github.com/Slicer/Slicer/blob/main/Base/Python/slicer/ScriptedLoadableModule.py
     """
@@ -54,10 +54,10 @@ class dosymetry(ScriptedLoadableModule):
     def __init__(self, parent):
         ScriptedLoadableModule.__init__(self, parent)
         self.parent.title = _(
-            "Dosymetry"
+            "Dosimetry"
         )  # TODO: make this more human readable by adding spaces
         # TODO: set categories (folders where the module shows up in the module selector)
-        self.parent.categories = [translate("qSlicerAbstractCoreModule", "Dosymetry")]
+        self.parent.categories = [translate("qSlicerAbstractCoreModule", "Dosimetry")]
         self.parent.dependencies = (
             []
         )  # TODO: add here list of module names that this module requires
@@ -84,7 +84,7 @@ def registerSampleData():
     pass
 
 
-class dosymetryTest(ScriptedLoadableModuleTest):
+class dosimetryTest(ScriptedLoadableModuleTest):
 
     def setUp(self):
         pass
@@ -92,8 +92,8 @@ class dosymetryTest(ScriptedLoadableModuleTest):
     def runTest(self):
         """Run as few or as many tests as needed here."""
         self.setUp()
-        self.test_dosymetry()
+        self.test_dosimetry()
 
-    def test_dosymetry(self):
+    def test_dosimetry(self):
         self.delayDisplay("Starting the mock test")
         self.delayDisplay("Mock test passed")

@@ -14,5 +14,5 @@ class gamma_analysisParameterNode:
     inputImage - The 3-channel input image where markers will be detected and placed.
     """
 
-    dosymetryResultVolume: vtkMRMLScalarVolumeNode
+    dosimetryResultVolume: vtkMRMLScalarVolumeNode
     rtDoseVolume: vtkMRMLScalarVolumeNode

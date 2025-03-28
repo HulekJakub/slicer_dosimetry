@@ -9,8 +9,8 @@ from slicer.ScriptedLoadableModule import *
 from slicer import vtkMRMLVectorVolumeNode, vtkMRMLScalarVolumeNode
 
 import slicer.util
-from src.dosymetry_parameter_node import dosymetryParameterNode
-from src.detect_dosymetry_stripes import detect_dosymetry_stripes
+from src.dosimetry_parameter_node import dosimetryParameterNode
+from src.detect_dosimetry_stripes import detect_dosimetry_stripes
 from src.utils import isFloat
 import subprocess
 import SimpleITK as sitk
@@ -18,11 +18,11 @@ import shutil
 import cv2
 import numpy as np
 
-# DosymetryLogic
+# DosimetryLogic
 #
 
 
-class dosymetryLogic(ScriptedLoadableModuleLogic):
+class dosimetryLogic(ScriptedLoadableModuleLogic):
     """This class should implement all the actual
     computation done by your module.  The interface
     should be such that other python code can import
@@ -37,9 +37,9 @@ class dosymetryLogic(ScriptedLoadableModuleLogic):
         ScriptedLoadableModuleLogic.__init__(self)
 
     def getParameterNode(self):
-        return dosymetryParameterNode(super().getParameterNode())
+        return dosimetryParameterNode(super().getParameterNode())
 
-    def runDosymetry(
+    def runDosimetry(
         self,
         inputImage: vtkMRMLVectorVolumeNode,
         calibrationFilePath: str,
@@ -138,7 +138,7 @@ class dosymetryLogic(ScriptedLoadableModuleLogic):
 
         img = slicer.util.arrayFromVolume(volume_node)
         img = img.reshape((img.shape[-3], img.shape[-2], img.shape[-1]))
-        output = detect_dosymetry_stripes(img, recalibration_stripes_present)
+        output = detect_dosimetry_stripes(img, recalibration_stripes_present)
 
         return output
 

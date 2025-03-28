@@ -1,18 +1,18 @@
 #-----------------------------------------------------------------------------
-set(MODULE_NAME dosymetry)
+set(MODULE_NAME dosimetry)
 
 
 #-----------------------------------------------------------------------------
 set(MODULE_PYTHON_SCRIPTS
   ${MODULE_NAME_FILE}.py
-  src/dosymetry_logic.py
-  src/dosymetry_parameter_node.py
-  src/dosymetry_widget.py
+  src/dosimetry_logic.py
+  src/dosimetry_parameter_node.py
+  src/dosimetry_widget.py
   src/utils.py
   src/optimize.py
   src/logic_subprocess.py
-  src/detect_dosymetry_stripes.py
-  src/dosymetry_settings_widget.py
+  src/detect_dosimetry_stripes.py
+  src/dosimetry_settings_widget.py
   Testing/Python/example_test.py
 )
 

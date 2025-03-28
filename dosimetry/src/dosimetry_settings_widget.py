@@ -31,7 +31,7 @@ SETTINGS_PREPROCESSING = {
 }
 
 
-class DosymetrySettingsWidget(object):
+class DosimetrySettingsWidget(object):
     def __init__(self, parentWidget=None):
         self.presetsDir = os.path.join(os.path.dirname(__file__), "..", "presets")
         if not os.path.exists(self.presetsDir):

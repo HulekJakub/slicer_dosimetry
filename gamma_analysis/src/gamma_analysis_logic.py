@@ -39,7 +39,7 @@ class gamma_analysisLogic(ScriptedLoadableModuleLogic):
 
     def runGammaAnalysis(
         self,
-        dosymetryResultVolume: vtkMRMLScalarVolumeNode,
+        dosimetryResultVolume: vtkMRMLScalarVolumeNode,
         rtDoseVolume: vtkMRMLScalarVolumeNode,
         rtPlanFilepath: str,
         dose,
@@ -58,9 +58,9 @@ class gamma_analysisLogic(ScriptedLoadableModuleLogic):
         rtDose = (
             slicer.util.arrayFromVolume(rtDoseVolume) * scaling * 100
         )  # change Gy to cGy
-        dosymetryResult = slicer.util.arrayFromVolume(dosymetryResultVolume)[0]
-        dosymetryResult = dosymetryResult.astype("float64")
-        spacing = dosymetryResultVolume.GetSpacing()
+        dosimetryResult = slicer.util.arrayFromVolume(dosimetryResultVolume)[0]
+        dosimetryResult = dosimetryResult.astype("float64")
+        spacing = dosimetryResultVolume.GetSpacing()
 
         rtPlanDicom = pydicom.dcmread(rtPlanFilepath, force=True)
         X, Y, Z = rtPlanDicom.BeamSequence[0].ControlPointSequence[0].IsocenterPosition
@@ -71,13 +71,13 @@ class gamma_analysisLogic(ScriptedLoadableModuleLogic):
         section = section[::-1, :]
 
         moving = sitk.GetImageFromArray(section)
-        fixed = sitk.GetImageFromArray(dosymetryResult)
+        fixed = sitk.GetImageFromArray(dosimetryResult)
 
         alignedRtDoseImage = self.__affine_registration(fixed, moving)
         alignedRtDose = sitk.GetArrayFromImage(alignedRtDoseImage)
 
         gammaImage = self.__calculate_gamma_index(
-            alignedRtDose, dosymetryResult, spacing, dose, dta, dose_threshold
+            alignedRtDose, dosimetryResult, spacing, dose, dta, dose_threshold
         )
 
         GPR = (
@@ -139,7 +139,7 @@ class gamma_analysisLogic(ScriptedLoadableModuleLogic):
     def __calculate_gamma_index(
         self,
         alignedRtDose,
-        dosymetryResult,
+        dosimetryResult,
         spacing,
         dose,
         dta,
@@ -156,7 +156,7 @@ class gamma_analysisLogic(ScriptedLoadableModuleLogic):
             grid,
             alignedRtDose,
             grid,
-            dosymetryResult,
+            dosimetryResult,
             dose,
             dta,
             max_gamma=max_gamma,

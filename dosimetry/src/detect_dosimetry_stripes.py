@@ -79,14 +79,14 @@ def find_maximal_inscribed_square(bin, contour):
     return best_rect
 
 
-def detect_dosymetry_stripes(stripes_tiff, recalibration_stripes_present):
-    dosymetry_uint8 = (stripes_tiff / 2**8).astype(np.uint8)
+def detect_dosimetry_stripes(stripes_tiff, recalibration_stripes_present):
+    dosimetry_uint8 = (stripes_tiff / 2**8).astype(np.uint8)
     stripes_binarized = binarize_stripes(stripes_tiff)
     contours = find_n_contours(
         stripes_binarized.astype(np.uint8), 3 if recalibration_stripes_present else 1
     )
 
-    labelled_contours = label_contours(dosymetry_uint8, contours)
+    labelled_contours = label_contours(dosimetry_uint8, contours)
     best_rect = find_maximal_inscribed_square(
         stripes_binarized, labelled_contours["sample"]
     )

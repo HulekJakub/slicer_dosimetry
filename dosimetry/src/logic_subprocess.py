@@ -9,7 +9,7 @@ import SimpleITK as sitk
 import numpy as np
 
 
-def run_dosymetry(parameters):
+def run_dosimetry(parameters):
     sampleImgSITK = sitk.ReadImage(parameters["sampleRegionFilePath"])
     sampleImg = sitk.GetArrayFromImage(sampleImgSITK)
     args_list = [(sampleImg[y], parameters) for y in range(sampleImg.shape[0])]
@@ -29,13 +29,13 @@ def run_dosymetry(parameters):
         [results_sample[i] for i in sorted(results_sample.keys())], axis=0
     )
     sample_result_SITK = sitk.GetImageFromArray(sample_result_image)
-    sample_filename = os.path.join(parameters["tempPath"], "dosymetry_result.nii")
+    sample_filename = os.path.join(parameters["tempPath"], "dosimetry_result.nii")
     sitk.WriteImage(sample_result_SITK, sample_filename)
 
     print(f"sample;{sample_filename}", flush=True)
 
 
-def run_dosymetry_with_recalibration(parameters):
+def run_dosimetry_with_recalibration(parameters):
     sampleImgSITK = sitk.ReadImage(parameters["sampleRegionFilePath"])
     sampleImg = sitk.GetArrayFromImage(sampleImgSITK)
     args_list = [(sampleImg[y], parameters) for y in range(sampleImg.shape[0])]
@@ -75,7 +75,7 @@ def run_dosymetry_with_recalibration(parameters):
         [results_sample[i] for i in sorted(results_sample.keys())], axis=0
     )
     sample_result_SITK = sitk.GetImageFromArray(sample_result_image)
-    sample_filename = os.path.join(parameters["tempPath"], "dosymetry_result.nii")
+    sample_filename = os.path.join(parameters["tempPath"], "dosimetry_result.nii")
     sitk.WriteImage(sample_result_SITK, sample_filename)
 
     print(f"sample;{sample_filename}", flush=True)
@@ -103,6 +103,6 @@ if __name__ == "__main__":
     )
 
     if with_recalibration:
-        run_dosymetry_with_recalibration(parameters)
+        run_dosimetry_with_recalibration(parameters)
     else:
-        run_dosymetry(parameters)
+        run_dosimetry(parameters)

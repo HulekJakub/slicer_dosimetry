@@ -152,7 +152,7 @@ class gamma_analysisWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def _checkCanRun(self, caller=None, event=None) -> None:
         if (
             self._parameterNode
-            and self._parameterNode.dosymetryResultVolume is not None
+            and self._parameterNode.dosimetryResultVolume is not None
             and self._parameterNode.rtDoseVolume is not None
         ):
             self.ui.runButton.toolTip = _("Compute gamma index")
@@ -177,7 +177,7 @@ class gamma_analysisWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         if (
             self._parameterNode is None
-            or self._parameterNode.dosymetryResultVolume is None
+            or self._parameterNode.dosimetryResultVolume is None
             or self._parameterNode.rtDoseVolume is None
         ):
             errors.append("Select reference and evaluated volume nodes")
@@ -193,7 +193,7 @@ class gamma_analysisWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             dose_threshold = advancedSettings["dose_threshold"]
             dta = advancedSettings["dta"]
             GPR, gammaImage, alignedRtDose = self.logic.runGammaAnalysis(
-                self._parameterNode.dosymetryResultVolume,
+                self._parameterNode.dosimetryResultVolume,
                 self._parameterNode.rtDoseVolume,
                 self.ui.rtPlanFileSelector.currentPath,
                 dose,
@@ -207,18 +207,18 @@ class gamma_analysisWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             )
             slicer.util.updateVolumeFromArray(registeredDose, alignedRtDose)
             registeredDose.SetOrigin(
-                self._parameterNode.dosymetryResultVolume.GetOrigin()
+                self._parameterNode.dosimetryResultVolume.GetOrigin()
             )
             registeredDose.SetSpacing(
-                self._parameterNode.dosymetryResultVolume.GetSpacing()
+                self._parameterNode.dosimetryResultVolume.GetSpacing()
             )
 
             nodeName = "GammaImage"
             gammaVolume = self.__get_or_create_node(nodeName, "vtkMRMLScalarVolumeNode")
             slicer.util.updateVolumeFromArray(gammaVolume, gammaImage)
-            gammaVolume.SetOrigin(self._parameterNode.dosymetryResultVolume.GetOrigin())
+            gammaVolume.SetOrigin(self._parameterNode.dosimetryResultVolume.GetOrigin())
             gammaVolume.SetSpacing(
-                self._parameterNode.dosymetryResultVolume.GetSpacing()
+                self._parameterNode.dosimetryResultVolume.GetSpacing()
             )
             slicer.app.layoutManager().sliceWidget(
                 "Red"

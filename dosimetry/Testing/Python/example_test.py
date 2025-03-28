@@ -2,12 +2,12 @@ import slicer
 from slicer.ScriptedLoadableModule import *
 
 
-from dosymetry import registerSampleData
-from src.dosymetry_logic import dosymetryLogic
+from dosimetry import registerSampleData
+from src.dosimetry_logic import dosimetryLogic
 
 
 #
-# dosymetryTest
+# dosimetryTest
 #
 
 
@@ -25,10 +25,10 @@ class example_testTest1(ScriptedLoadableModuleTest):
     def runTest(self):
         """Run as few or as many tests as needed here."""
         self.setUp()
-        self.test_dosymetry1()
-        self.test_dosymetry2()
+        self.test_dosimetry1()
+        self.test_dosimetry2()
 
-    def test_dosymetry1(self):
+    def test_dosimetry1(self):
         """Ideally you should have several levels of tests.  At the lowest level
         tests should exercise the functionality of the logic with different inputs
         (both valid and invalid).  At higher levels your tests should emulate the
@@ -47,7 +47,7 @@ class example_testTest1(ScriptedLoadableModuleTest):
         # import SampleData
 
         # registerSampleData()
-        # inputVolume = SampleData.downloadSample("dosymetry1")
+        # inputVolume = SampleData.downloadSample("dosimetry1")
         # self.delayDisplay("Loaded test data set")
 
         # inputScalarRange = inputVolume.GetImageData().GetScalarRange()
@@ -59,7 +59,7 @@ class example_testTest1(ScriptedLoadableModuleTest):
 
         # # Test the module logic
 
-        # logic = dosymetryLogic()
+        # logic = dosimetryLogic()
 
         # # Test algorithm with non-inverted threshold
         # logic.process(inputVolume, outputVolume, threshold, True)
@@ -75,7 +75,7 @@ class example_testTest1(ScriptedLoadableModuleTest):
 
         self.delayDisplay("Test passed")
 
-    def test_dosymetry2(self):
+    def test_dosimetry2(self):
 
         self.assertEqual(1, 0 + 1)
 

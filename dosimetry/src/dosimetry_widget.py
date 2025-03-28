@@ -29,21 +29,21 @@ matplotlib.use("Agg")
 import qt
 from qt import QObject, Signal, Slot
 
-from src.dosymetry_logic import dosymetryLogic
-from src.dosymetry_parameter_node import dosymetryParameterNode
-from src.dosymetry_settings_widget import DosymetrySettingsWidget
+from src.dosimetry_logic import dosimetryLogic
+from src.dosimetry_parameter_node import dosimetryParameterNode
+from src.dosimetry_settings_widget import DosimetrySettingsWidget
 from src.utils import isFloat, point2dToRas
 import SimpleITK as sitk
 
 
 #
-# DosymetryWidget
+# DosimetryWidget
 #
 class Communicate(QObject):
     setProgressValue = Signal(int)
 
 
-class dosymetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
+class dosimetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     """Uses ScriptedLoadableModuleWidget base class, available at:
     https://github.com/Slicer/Slicer/blob/main/Base/Python/slicer/ScriptedLoadableModule.py
     """
@@ -52,8 +52,8 @@ class dosymetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.__init__(self, parent)
         VTKObservationMixin.__init__(self)  # needed for parameter node observation
-        self.logic: Optional[dosymetryLogic] = None
-        self._parameterNode: Optional[dosymetryParameterNode] = None
+        self.logic: Optional[dosimetryLogic] = None
+        self._parameterNode: Optional[dosimetryParameterNode] = None
         self._parameterNodeGuiTag = None
         self.stripesDetected = False
         self.roi_nodes = {}
@@ -65,7 +65,7 @@ class dosymetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         # Load widget from .ui file (created by Qt Designer).
         # Additional widgets can be instantiated manually and added to self.layout.
-        uiWidget = slicer.util.loadUI(self.resourcePath("UI/dosymetry.ui"))
+        uiWidget = slicer.util.loadUI(self.resourcePath("UI/dosimetry.ui"))
         self.layout.addWidget(uiWidget)
         self.ui = slicer.util.childWidgetVariables(uiWidget)
 
@@ -74,7 +74,7 @@ class dosymetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # "setMRMLScene(vtkMRMLScene*)" slot.
         uiWidget.setMRMLScene(slicer.mrmlScene)
 
-        self.logic = dosymetryLogic()
+        self.logic = dosimetryLogic()
 
         # These connections ensure that we update parameter node when scene is closed
         self.addObserver(
@@ -97,7 +97,7 @@ class dosymetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.settingsFormLayout = qt.QFormLayout(self.settingsCollapsibleButton)
 
         # Initialize the settings widget and add it to the collapsible button layout
-        self.settingsWidget = DosymetrySettingsWidget(
+        self.settingsWidget = DosimetrySettingsWidget(
             parentWidget=self.settingsCollapsibleButton
         )
         self.settingsFormLayout.addWidget(self.settingsWidget.widget)
@@ -160,7 +160,7 @@ class dosymetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 self._parameterNode.inputImage = firstVolumeNode
 
     def setParameterNode(
-        self, inputParameterNode: Optional[dosymetryParameterNode]
+        self, inputParameterNode: Optional[dosimetryParameterNode]
     ) -> None:
         """
         Set and observe parameter node.
@@ -260,7 +260,7 @@ class dosymetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 control_std,
                 recalibration_mean,
                 recalibration_std,
-            ) = self.logic.runDosymetry(
+            ) = self.logic.runDosimetry(
                 input_volume_node,
                 self.ui.calibrationFileSelector.currentPath,
                 self.ui.outputSelector.currentPath,
@@ -276,7 +276,7 @@ class dosymetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.roi_nodes = {}
 
             saveFileName = os.path.join(
-                self.ui.outputSelector.currentPath, "dosymetry_result.nrrd"
+                self.ui.outputSelector.currentPath, "dosimetry_result.nrrd"
             )
             saveImg = sitk.GetImageFromArray(calibrated_image)
             saveImg.SetOrigin(input_volume_node.GetOrigin())
