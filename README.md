@@ -17,7 +17,7 @@ It consists of three modules: **Stripe Calibration**, **Dosimetry**, and **Gamma
 ![alt text](docs/imgs/dosimetry_result.png)
 
 ## Gamma Analysis
-**Gamma Analysis** performs gamma analysis using the dosimetry results from **Dosimetry**, a dose DICOM volume, and a treatment plan DICOM file. It then returns the gamma index.  
+**Gamma Analysis** performs gamma analysis using the dosimetry results from **Dosimetry**, a dose DICOM volume, and a treatment plan DICOM file. It then returns gamma pasing rate.  
 
 ![alt text](docs/imgs/gamma_analysis.png)
 
