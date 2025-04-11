@@ -160,6 +160,7 @@ class gamma_analysisWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         else:
             self.ui.runButton.toolTip = _("Select reference and evaluated volume nodes")
             self.ui.runButton.enabled = False
+        self.ui.gammaLineEdit.text = ""
 
     def __onRunButtonCheck(self):
         errors = []

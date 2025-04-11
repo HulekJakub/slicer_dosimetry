@@ -167,7 +167,7 @@ def plot_matched_dict(stripes_raw, contours_matched, centers_from_dict=False):
 def markers_detection(stripes_tiff, calibration_lines):
     stripes_bgr = (stripes_tiff // 256).astype("uint8")
     calibration_dict = {
-        int(el[0].strip()): int(el[1].strip())
+        int(el[0].strip()): float(el[1].strip())
         for el in [line.split("-") for line in calibration_lines]
     }
 

@@ -17,7 +17,7 @@ SETTINGS_LABELS = {
     "tolerance": "Tolerance",
     "max_iterations": "Max number of iterations",
     "normalization_factor": "Image normalization factor",
-    "max_dose": "Maximal possible dose",
+    "max_dose": "Maximal possible dose [cGy]",
     "number_of_processes": "Number of workers",
 }
 

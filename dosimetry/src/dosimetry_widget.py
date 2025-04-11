@@ -333,7 +333,8 @@ class dosimetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         sample_roi_node.SetName(f"sample")
         self.roi_nodes["sample"] = sample_roi_node
 
-        size = self.ui.roiSizeSelector.value
+        sizeHorizontal = self.ui.roiSizeHorizontal.value  # Size in mm
+        sizeVeritcal = self.ui.roiSizeVertical.value  # Size in mm
         for name in ["control", "recalibration"]:
             if name in roi_coordinates:
                 x_ras, y_ras, z_ras = point2dToRas(
@@ -341,14 +342,14 @@ class dosimetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     image_origin,
                     image_spacing,
                 )
-                roi_node = self.__createRoiNode(x_ras, y_ras, z_ras, size, name)
+                roi_node = self.__createRoiNode(x_ras, y_ras, z_ras, sizeHorizontal, sizeVeritcal, name)
                 self.roi_nodes[name] = roi_node
 
-    def __createRoiNode(self, x_ras, y_ras, z_ras, size, name):
+    def __createRoiNode(self, x_ras, y_ras, z_ras, sizeHorizontal, sizeVeritcal, name):
         roi_node = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsROINode")
 
         roi_node.SetXYZ(x_ras, y_ras, z_ras)
-        roi_node.SetSize(size, size, size)
+        roi_node.SetSize(sizeHorizontal, sizeVeritcal, 5)
 
         roi_node.SetName(f"{name}")
         return roi_node

@@ -74,7 +74,7 @@ class stripe_calibrationLogic(ScriptedLoadableModuleLogic):
                 line.strip() for line in f.readlines() if line.strip() != ""
             ]
         calibration_dict = {
-            int(el[0].strip()): int(el[1].strip())
+            int(el[0].strip()): float(el[1].strip())
             for el in [line.split("-") for line in calibration_lines]
         }
 
@@ -188,7 +188,7 @@ class stripe_calibrationLogic(ScriptedLoadableModuleLogic):
             return (a + b * x) / (c + x)
 
         x_data = np.array(list(calibration_dict.values()))
-        plt.figure(figsize=(10, 8))
+        plt.figure(figsize=(10, 8), dpi=200)
         for i, color in enumerate(["r", "g", "b"]):
             y_data_list = [
                 color_values[:, :, i].flatten()
@@ -219,9 +219,9 @@ class stripe_calibrationLogic(ScriptedLoadableModuleLogic):
 
             plt.plot(x_fit, y_fit, f"{color}-", label=f"Fitted curve ({color})")
 
-        plt.xlabel("x")
-        plt.ylabel("y")
+        plt.xlabel("Dose [cGy]")
+        plt.ylabel("Channel intensity")
         plt.legend()
-        plt.title("Interpolation with y = (a + b*x) / (c + x)")
+        plt.title("Channel intensity (as a fraction of max intensity) by dose \nInterpolation with y = (a + b*x) / (c + x)")
         plt.savefig(os.path.join(output_dir_path, "calibration_plot.png"))
         return

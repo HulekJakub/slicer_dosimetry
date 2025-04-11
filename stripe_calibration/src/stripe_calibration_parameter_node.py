@@ -16,4 +16,4 @@ class stripe_calibrationParameterNode:
     inputImage: vtkMRMLVectorVolumeNode
     calibrationFilePath: str
     calibrationOutputPath: str
-    roiSize: float
+    roiSizeHorizontal: float

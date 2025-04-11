@@ -23,7 +23,7 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;2. Select it in &amp;quot;Image&amp;quot; selector&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;3. Select calibration json file path&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;4. Select output path&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;5. If recalibration stripes are included in your image, check &amp;quot;Recalibrate&amp;quot; button in &amp;quot;Recalibration settings&amp;quot;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;5. If film scaling stripes are included in your image, check &amp;quot;Recalibrate&amp;quot; button in &amp;quot;Film scaling&amp;quot;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;6. Click &amp;quot;Detect Stripes&amp;quot;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;7. Adjust created ROIs if needed&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;8. Provide recalibaration stripes doses if used (look step 5)&lt;/p&gt;
@@ -112,37 +112,37 @@ p, li { white-space: pre-wrap; }
       <bool>true</bool>
      </property>
      <property name="text">
-      <string>Recalibration settings</string>
+      <string>Film scaling</string>
      </property>
      <property name="checked">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <layout class="QFormLayout" name="formLayout_3">
       <item row="1" column="1">
        <widget class="ctkCheckBox" name="calibrationStripesIncludedCheckbox"/>
       </item>
-      <item row="3" column="0">
+      <item row="4" column="0">
        <widget class="QLabel" name="label_2">
         <property name="text">
-         <string>Control dose [cGy]</string>
+         <string>Control stripe dose [cGy]</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
+      <item row="4" column="1">
        <widget class="QLineEdit" name="controlStripeDose">
         <property name="text">
          <string/>
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
+      <item row="5" column="0">
        <widget class="QLabel" name="label_5">
         <property name="text">
-         <string>Recalibration dose [cGy]</string>
+         <string>Recalibration stripe dose [cGy]</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
+      <item row="5" column="1">
        <widget class="QLineEdit" name="recalibrationStripeDose">
         <property name="text">
          <string/>
@@ -159,17 +159,46 @@ p, li { white-space: pre-wrap; }
       <item row="2" column="0">
        <widget class="QLabel" name="label_10">
         <property name="text">
-         <string>ROI Size [mm]</string>
+         <string>ROI Size horizontal [mm]</string>
         </property>
        </widget>
       </item>
       <item row="2" column="1">
-       <widget class="qMRMLSliderWidget" name="roiSizeSelector">
+       <widget class="qMRMLSliderWidget" name="roiSizeHorizontal">
         <property name="singleStep">
          <double>0.100000000000000</double>
         </property>
         <property name="maximum">
          <double>99.900000000000006</double>
+        </property>
+        <property name="value">
+         <double>10.000000000000000</double>
+        </property>
+        <property name="quantity">
+         <string notr="true"/>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>ROI size vertical [mm]</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="qMRMLSliderWidget" name="roiSizeVertical">
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="pageStep">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="minimum">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
         </property>
         <property name="value">
          <double>10.000000000000000</double>
@@ -188,7 +217,7 @@ p, li { white-space: pre-wrap; }
       <bool>false</bool>
      </property>
      <property name="toolTip">
-      <string>Detect the sample stripe and optional recalibration stripes</string>
+      <string>Detect the sample stripe and optional film scaling stripes</string>
      </property>
      <property name="text">
       <string>Detect Stripes</string>
