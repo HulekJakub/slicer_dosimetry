@@ -208,13 +208,14 @@ class stripe_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.mrmlScene.RemoveNode(node)
         self.roi_nodes = {}
 
-        size = self.ui.roiSize.value  # Size in mm
+        sizeHorizontal = self.ui.roiSizeHorizontal.value  # Size in mm
+        sizeVeritcal = self.ui.roiSizeVertical.value  # Size in mm
         for key, point in centers.items():
             x_ras, y_ras, z_ras = self.__point2d_to_ras(
                 [point["x"], point["y"]], image_origin, image_spacing
             )
 
-            roi_node = self.__create_roi_node(x_ras, y_ras, z_ras, size, key)
+            roi_node = self.__create_roi_node(x_ras, y_ras, z_ras, sizeHorizontal, sizeVeritcal, key)
             self.roi_nodes[key] = roi_node
 
     def onGenerateCalibration(self):
@@ -252,11 +253,11 @@ class stripe_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         z_ras = image_origin[2] - value * image_spacing[2]
         return x_ras, y_ras, z_ras
 
-    def __create_roi_node(self, x_ras, y_ras, z_ras, size, name):
+    def __create_roi_node(self, x_ras, y_ras, z_ras, sizeHorizontal, sizeVeritcal, name):
         roi_node = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsROINode")
 
         roi_node.SetXYZ(x_ras, y_ras, z_ras)
-        roi_node.SetSize(size, size, size)
+        roi_node.SetSize(sizeHorizontal, sizeVeritcal, 1)
 
         roi_node.SetName(f"{name}")
         return roi_node
