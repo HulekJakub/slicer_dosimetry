@@ -15,4 +15,3 @@ class gamma_analysisParameterNode:
     """
 
     dosimetryResultVolume: vtkMRMLScalarVolumeNode
-    rtDoseVolume: vtkMRMLScalarVolumeNode

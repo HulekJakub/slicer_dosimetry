@@ -20,8 +20,8 @@ p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Instructions:&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;1. Select &amp;quot;Dosimetry Result&amp;quot; file (result of the Dosimetry module).&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;2. Select &amp;quot;RT Dose&amp;quot; File (import as a volume).&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;3. Select &amp;quot;RT Plan File&amp;quot; DCM file .&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;2. Select &amp;quot;RT Dose Filepath&amp;quot;.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;3. Select &amp;quot;RT Plan Filepath&amp;quot; DCM file .&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;4. Check &amp;quot;Advanced Settings&amp;quot; for specifying the gamma analysis parameters.&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;5. Click &amp;quot;Run&amp;quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
@@ -45,14 +45,14 @@ p, li { white-space: pre-wrap; }
       <item row="4" column="0">
        <widget class="QLabel" name="label_4">
         <property name="text">
-         <string>RT Plan File</string>
+         <string>RT Plan Filepath</string>
         </property>
        </widget>
       </item>
       <item row="3" column="0">
        <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>RT Dose File</string>
+         <string>RT Dose Filepath</string>
         </property>
        </widget>
       </item>
@@ -60,33 +60,6 @@ p, li { white-space: pre-wrap; }
        <widget class="QLabel" name="label">
         <property name="text">
          <string>Dosimetry Result:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="qMRMLNodeComboBox" name="rtDoseFileSelector">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="toolTip">
-         <string>Pick the input to the algorithm.</string>
-        </property>
-        <property name="nodeTypes">
-         <stringlist notr="true">
-          <string>vtkMRMLScalarVolumeNode</string>
-         </stringlist>
-        </property>
-        <property name="showChildNodeTypes">
-         <bool>false</bool>
-        </property>
-        <property name="addEnabled">
-         <bool>false</bool>
-        </property>
-        <property name="removeEnabled">
-         <bool>false</bool>
-        </property>
-        <property name="SlicerParameterName" stdset="0">
-         <string>rtDoseVolume</string>
         </property>
        </widget>
       </item>
@@ -117,6 +90,9 @@ p, li { white-space: pre-wrap; }
         </property>
        </widget>
       </item>
+      <item row="3" column="1">
+       <widget class="ctkPathLineEdit" name="rtDoseFileSelector"/>
+      </item>
       <item row="4" column="1">
        <widget class="ctkPathLineEdit" name="rtPlanFileSelector"/>
       </item>
@@ -133,16 +109,30 @@ p, li { white-space: pre-wrap; }
      </property>
      <layout class="QFormLayout" name="formLayout">
       <item row="0" column="0">
-       <widget class="QLabel" name="label_2">
+       <widget class="QLabel" name="label_5">
         <property name="text">
-         <string>Gamma</string>
+         <string>Calculate local gamma</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="gammaIndexLabel">
+        <property name="text">
+         <string>Global gamma index</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="gammaLineEdit">
+        <property name="readOnly">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QLineEdit" name="gammaLineEdit">
-        <property name="readOnly">
-         <bool>true</bool>
+       <widget class="QCheckBox" name="localGammaCheckbox">
+        <property name="text">
+         <string/>
         </property>
        </widget>
       </item>
@@ -207,22 +197,6 @@ p, li { white-space: pre-wrap; }
    <sender>gamma_analysis</sender>
    <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
    <receiver>dosimetryResultSelector</receiver>
-   <slot>setMRMLScene(vtkMRMLScene*)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>122</x>
-     <y>132</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>248</x>
-     <y>61</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>gamma_analysis</sender>
-   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
-   <receiver>rtDoseFileSelector</receiver>
    <slot>setMRMLScene(vtkMRMLScene*)</slot>
    <hints>
     <hint type="sourcelabel">
