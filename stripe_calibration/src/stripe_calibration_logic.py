@@ -220,8 +220,10 @@ class stripe_calibrationLogic(ScriptedLoadableModuleLogic):
             plt.plot(x_fit, y_fit, f"{color}-", label=f"Fitted curve ({color})")
 
         plt.xlabel("Dose [cGy]")
-        plt.ylabel("Channel intensity")
+        plt.ylabel("Channel intensity [0-1]")
         plt.legend()
-        plt.title("Channel intensity (as a fraction of max intensity) by dose \nInterpolation with y = (a + b*x) / (c + x)")
+        plt.title(
+            "Channel intensity (as a fraction of max intensity) by dose \nInterpolation with y = (a + b*x) / (c + x)"
+        )
         plt.savefig(os.path.join(output_dir_path, "calibration_plot.png"))
         return

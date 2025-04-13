@@ -33,7 +33,7 @@ try:
     import imageio
 except ModuleNotFoundError:
     slicer.util.pip_install("imageio")
-    
+
 # from Testing.Python.example_test import *
 from src.stripe_calibration_logic import *
 from src.stripe_calibration_parameter_node import *

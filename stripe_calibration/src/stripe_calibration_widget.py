@@ -72,11 +72,13 @@ class stripe_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.ui.labelOutputDirectory.visible = False
         self.ui.calibrationOutputSelector.visible = False
-        self.ui.overrideOutputDirectoryCheckbox.connect("stateChanged(int)", self.__onOverrideOutputDirectoryCheckboxChange)
-        
+        self.ui.overrideOutputDirectoryCheckbox.connect(
+            "stateChanged(int)", self.__onOverrideOutputDirectoryCheckboxChange
+        )
+
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
-        
+
     def __onOverrideOutputDirectoryCheckboxChange(self, value):
         if value == 0:
             self.ui.labelOutputDirectory.visible = False
@@ -84,7 +86,6 @@ class stripe_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         else:
             self.ui.labelOutputDirectory.visible = True
             self.ui.calibrationOutputSelector.visible = True
-
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
@@ -228,21 +229,32 @@ class stripe_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 [point["x"], point["y"]], image_origin, image_spacing
             )
 
-            roi_node = self.__create_roi_node(x_ras, y_ras, z_ras, sizeHorizontal, sizeVeritcal, key)
+            roi_node = self.__create_roi_node(
+                x_ras, y_ras, z_ras, sizeHorizontal, sizeVeritcal, key
+            )
             self.roi_nodes[key] = roi_node
 
     def onGenerateCalibration(self):
         if self.ui.calibrationFileSelector.currentPath == "":
             slicer.util.errorDisplay("Did not set calibration file!")
             return
-        if self.ui.overrideOutputDirectoryCheckbox.checked and self.ui.calibrationOutputSelector.currentPath == "":
-            slicer.util.errorDisplay("Did not set calibration override output directory!")
+        if (
+            self.ui.overrideOutputDirectoryCheckbox.checked
+            and self.ui.calibrationOutputSelector.currentPath == ""
+        ):
+            slicer.util.errorDisplay(
+                "Did not set calibration override output directory!"
+            )
             return
         with slicer.util.tryWithErrorDisplay(
             _("Failed to compute results."), waitCursor=True
         ):
             volume_node = self.ui.inputImageSelector.currentNode()
-            outputPath = self.ui.calibrationOutputSelector.currentPath if self.ui.overrideOutputDirectoryCheckbox.checked else os.path.dirname(volume_node.GetStorageNode().GetFileName())
+            outputPath = (
+                self.ui.calibrationOutputSelector.currentPath
+                if self.ui.overrideOutputDirectoryCheckbox.checked
+                else os.path.dirname(volume_node.GetStorageNode().GetFileName())
+            )
             interpolation_parameters = self.logic.create_calibration(
                 volume_node,
                 self.roi_nodes,
@@ -251,9 +263,7 @@ class stripe_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             )
             logging.info(interpolation_parameters)
 
-            plot_path = os.path.join(
-                outputPath, "calibration_plot.png"
-            )
+            plot_path = os.path.join(outputPath, "calibration_plot.png")
             for node in self.roi_nodes.values():
                 slicer.mrmlScene.RemoveNode(node)
             self.roi_nodes = {}
@@ -267,7 +277,9 @@ class stripe_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         z_ras = image_origin[2] - value * image_spacing[2]
         return x_ras, y_ras, z_ras
 
-    def __create_roi_node(self, x_ras, y_ras, z_ras, sizeHorizontal, sizeVeritcal, name):
+    def __create_roi_node(
+        self, x_ras, y_ras, z_ras, sizeHorizontal, sizeVeritcal, name
+    ):
         roi_node = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsROINode")
 
         roi_node.SetXYZ(x_ras, y_ras, z_ras)
