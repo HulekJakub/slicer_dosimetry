@@ -1,4 +1,5 @@
 from typing import Annotated, Optional
+import os
 import qt
 
 import ctk
@@ -87,9 +88,19 @@ class gamma_analysisWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             parentWidget=self.settingsCollapsibleButton
         )
         self.settingsFormLayout.addWidget(self.settingsWidget.widget)
-        # Make sure parameter node is initialized (needed for module reload)
+
+        self.ui.localGammaCheckbox.connect(
+            "stateChanged(int)", self.__onLocalGammaCheckboxChange
+        )
 
         self.initializeParameterNode()
+
+    def __onLocalGammaCheckboxChange(self, value):
+        if value == 0:
+            self.ui.gammaIndexLabel.text = "Global gamma index"
+        else:
+            self.ui.gammaIndexLabel.text = "Local gamma index"
+        self.ui.gammaLineEdit.text = ""
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
@@ -153,7 +164,6 @@ class gamma_analysisWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         if (
             self._parameterNode
             and self._parameterNode.dosimetryResultVolume is not None
-            and self._parameterNode.rtDoseVolume is not None
         ):
             self.ui.runButton.toolTip = _("Compute gamma index")
             self.ui.runButton.enabled = True
@@ -166,6 +176,8 @@ class gamma_analysisWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         errors = []
         if self.ui.rtPlanFileSelector.currentPath == "":
             errors.append("Did not set RT Plan File!")
+        if self.ui.rtDoseFileSelector.currentPath == "":
+            errors.append("Did not set RT Dose File!")
         return errors
 
     def onRunButton(self) -> None:
@@ -179,7 +191,6 @@ class gamma_analysisWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         if (
             self._parameterNode is None
             or self._parameterNode.dosimetryResultVolume is None
-            or self._parameterNode.rtDoseVolume is None
         ):
             errors.append("Select reference and evaluated volume nodes")
 
@@ -193,40 +204,67 @@ class gamma_analysisWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             dose = advancedSettings["dose"]
             dose_threshold = advancedSettings["dose_threshold"]
             dta = advancedSettings["dta"]
-            GPR, gammaImage, alignedRtDose = self.logic.runGammaAnalysis(
-                self._parameterNode.dosimetryResultVolume,
-                self._parameterNode.rtDoseVolume,
+            dosimetry_volume = self._parameterNode.dosimetryResultVolume
+            GPR, gammaImage, alignedRtDose, doseSection = self.logic.runGammaAnalysis(
+                dosimetry_volume,
+                self.ui.rtDoseFileSelector.currentPath,
                 self.ui.rtPlanFileSelector.currentPath,
                 dose,
                 dose_threshold,
                 dta,
+                self.ui.localGammaCheckbox.checked,
             )
 
-            nodeName = "RegisteredTPSDose"
+            dicomFileName = os.path.basename(
+                self.ui.rtDoseFileSelector.currentPath
+            ).split(".")[-2]
+            nodeName = f"{dicomFileName}_alignedImage"
             registeredDose = self.__get_or_create_node(
                 nodeName, "vtkMRMLScalarVolumeNode"
             )
             slicer.util.updateVolumeFromArray(registeredDose, alignedRtDose)
-            registeredDose.SetOrigin(
-                self._parameterNode.dosimetryResultVolume.GetOrigin()
-            )
-            registeredDose.SetSpacing(
-                self._parameterNode.dosimetryResultVolume.GetSpacing()
-            )
+            registeredDose.SetOrigin(dosimetry_volume.GetOrigin())
+            registeredDose.SetSpacing(dosimetry_volume.GetSpacing())
+            registeredDose.CopyOrientation(dosimetry_volume)
 
-            nodeName = "GammaImage"
+            nodeName = f"{dicomFileName}_gammaImage"
             gammaVolume = self.__get_or_create_node(nodeName, "vtkMRMLScalarVolumeNode")
             slicer.util.updateVolumeFromArray(gammaVolume, gammaImage)
-            gammaVolume.SetOrigin(self._parameterNode.dosimetryResultVolume.GetOrigin())
-            gammaVolume.SetSpacing(
-                self._parameterNode.dosimetryResultVolume.GetSpacing()
+            gammaVolume.SetOrigin(dosimetry_volume.GetOrigin())
+            gammaVolume.SetSpacing(dosimetry_volume.GetSpacing())
+            gammaVolume.CopyOrientation(dosimetry_volume)
+
+            nodeName = f"{dicomFileName}_selectedDoseSlice"
+            doseSectionVolume = self.__get_or_create_node(
+                nodeName, "vtkMRMLScalarVolumeNode"
             )
-            slicer.app.layoutManager().sliceWidget(
+            slicer.util.updateVolumeFromArray(doseSectionVolume, doseSection)
+            doseSectionVolume.SetOrigin(dosimetry_volume.GetOrigin())
+            doseSectionVolume.SetSpacing(dosimetry_volume.GetSpacing())
+            doseSectionVolume.CopyOrientation(dosimetry_volume)
+
+            layoutManager = slicer.app.layoutManager()
+            layoutManager.sliceWidget(
                 "Red"
             ).sliceLogic().GetSliceCompositeNode().SetBackgroundVolumeID(
                 gammaVolume.GetID()
             )
-            sliceLogics = slicer.app.layoutManager().mrmlSliceLogics()
+            layoutManager.sliceWidget(
+                "Green"
+            ).sliceLogic().GetSliceCompositeNode().SetBackgroundVolumeID(
+                dosimetry_volume.GetID()
+            )
+            layoutManager.sliceWidget(
+                "Yellow"
+            ).sliceLogic().GetSliceCompositeNode().SetBackgroundVolumeID(
+                doseSectionVolume.GetID()
+            )
+            for viewName in ["Red", "Green", "Yellow"]:
+                sliceNode = (
+                    layoutManager.sliceWidget(viewName).sliceLogic().GetSliceNode()
+                )
+                sliceNode.SetOrientation("Axial")
+            sliceLogics = layoutManager.mrmlSliceLogics()
             for i in range(sliceLogics.GetNumberOfItems()):
                 sliceLogic = sliceLogics.GetItemAsObject(i)
                 if sliceLogic:

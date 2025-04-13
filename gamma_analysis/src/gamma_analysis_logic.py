@@ -40,24 +40,26 @@ class gamma_analysisLogic(ScriptedLoadableModuleLogic):
     def runGammaAnalysis(
         self,
         dosimetryResultVolume: vtkMRMLScalarVolumeNode,
-        rtDoseVolume: vtkMRMLScalarVolumeNode,
+        rtDoseFilepath: str,
         rtPlanFilepath: str,
         dose,
         dose_threshold,
         dta,
+        localGamma,
     ):
         import time
 
         startTime = time.time()
         logging.info(f"Processing started")
 
-        rtDoseFileName = rtDoseVolume.GetStorageNode().GetFileName()
-        rtDoseDicom = pydicom.dcmread(rtDoseFileName, force=True)
+        rtDoseDicom = pydicom.dcmread(rtDoseFilepath, force=True)
+        dicomFileName = os.path.basename(rtDoseFilepath)
+        rtDoseVolume = self.__loadVolumeFromDICOMFile(rtDoseDicom, dicomFileName)
         scaling = float(rtDoseDicom.DoseGridScaling)
 
         rtDose = (
             slicer.util.arrayFromVolume(rtDoseVolume) * scaling * 100
-        )  # change Gy to cGy
+        )  # dose in 16-bit unsigned int * Gy per unit * 100 to convert to cGY
         dosimetryResult = slicer.util.arrayFromVolume(dosimetryResultVolume)[0]
         dosimetryResult = dosimetryResult.astype("float64")
         spacing = dosimetryResultVolume.GetSpacing()
@@ -65,7 +67,7 @@ class gamma_analysisLogic(ScriptedLoadableModuleLogic):
         rtPlanDicom = pydicom.dcmread(rtPlanFilepath, force=True)
         X, Y, Z = rtPlanDicom.BeamSequence[0].ControlPointSequence[0].IsocenterPosition
 
-        _, J, _ = self.__getIJKCoordinates1(X, -Y, Z, rtDoseVolume)
+        _, J, _ = self.__getIJKCoordinates1(X, Y, Z, rtDoseVolume)
 
         section = np.copy(rtDose[:, J, :])
         section = section[::-1, :]
@@ -77,7 +79,13 @@ class gamma_analysisLogic(ScriptedLoadableModuleLogic):
         alignedRtDose = sitk.GetArrayFromImage(alignedRtDoseImage)
 
         gammaImage = self.__calculate_gamma_index(
-            alignedRtDose, dosimetryResult, spacing, dose, dta, dose_threshold
+            alignedRtDose,
+            dosimetryResult,
+            spacing,
+            dose,
+            dta,
+            dose_threshold,
+            localGamma=localGamma,
         )
 
         GPR = (
@@ -87,7 +95,40 @@ class gamma_analysisLogic(ScriptedLoadableModuleLogic):
         stopTime = time.time()
         logging.info(f"Processing completed in {stopTime-startTime:.2f} seconds")
 
-        return GPR, gammaImage, alignedRtDose
+        return GPR, gammaImage, alignedRtDose, section
+
+    def __loadVolumeFromDICOMFile(self, dicomFile, name):
+        pixelImage = dicomFile.pixel_array.astype(np.uint16)
+
+        # pixelImage = np.squeeze(pixelImage)
+        volumeNode = slicer.util.addVolumeFromArray(pixelImage, name=name)
+
+        pixel_spacing = [float(spc) for spc in dicomFile.PixelSpacing]
+        slice_thickness = float(
+            1 if dicomFile.SliceThickness is None else dicomFile.SliceThickness
+        )
+        spacing = [pixel_spacing[0], pixel_spacing[1], slice_thickness]
+        volumeNode.SetSpacing(spacing)
+
+        origin = [float(v) for v in dicomFile.ImagePositionPatient]
+        volumeNode.SetOrigin(origin)
+
+        orientation = [float(x) for x in dicomFile.ImageOrientationPatient]
+        row_cosines = np.array(orientation[0:3])
+        col_cosines = np.array(orientation[3:6])
+        slice_cosines = np.cross(row_cosines, col_cosines)
+        ijk_to_ras = vtk.vtkMatrix4x4()
+        for i in range(3):
+            ijk_to_ras.SetElement(i, 0, row_cosines[i] * spacing[0])
+            ijk_to_ras.SetElement(i, 1, col_cosines[i] * spacing[1])
+            ijk_to_ras.SetElement(i, 2, slice_cosines[i] * spacing[2])
+            ijk_to_ras.SetElement(i, 3, origin[i])
+        ijk_to_ras.SetElement(3, 3, 1.0)
+
+        volumeNode.SetIJKToRASMatrix(ijk_to_ras)
+        print(ijk_to_ras)
+
+        return volumeNode
 
     def __getIJKCoordinates1(self, X, Y, Z, volumeNode):
         # https://slicer.readthedocs.io/en/latest/developer_guide/script_repository/volumes.html "Get volume voxel coordinates from markup control point RAS coordinates"
@@ -146,6 +187,7 @@ class gamma_analysisLogic(ScriptedLoadableModuleLogic):
         dose_threshold,
         max_gamma=2.0,
         interp_fraction=5,
+        localGamma=False,
     ) -> np.ndarray:
 
         gridx = np.arange(alignedRtDose.shape[0]) * abs(spacing[0])
@@ -162,6 +204,7 @@ class gamma_analysisLogic(ScriptedLoadableModuleLogic):
             max_gamma=max_gamma,
             interp_fraction=interp_fraction,
             lower_percent_dose_cutoff=dose_threshold,
+            local_gamma=localGamma,
         )
         gamma = np.nan_to_num(gamma, nan=0)
 
