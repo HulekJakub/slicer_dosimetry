@@ -23,7 +23,7 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;2. Select it in &amp;quot;Image&amp;quot; selector&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;3. Select calibration json file path&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;4. Select output path&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;5. If film scaling stripes are included in your image, check &amp;quot;Recalibrate&amp;quot; button in &amp;quot;Film scaling&amp;quot;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;5. If film scaling stripes are included in your image, check &amp;quot;Use film scaling&amp;quot; button in &amp;quot;Film scaling&amp;quot;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;6. Click &amp;quot;Detect Stripes&amp;quot;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;7. Adjust created ROIs if needed&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;8. Provide recalibaration stripes doses if used (look step 5)&lt;/p&gt;
@@ -86,20 +86,34 @@ p, li { white-space: pre-wrap; }
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_4">
+      <item row="3" column="0">
+       <widget class="QLabel" name="labelOutputDirectory">
         <property name="text">
-         <string>Output directory path</string>
+         <string>Calibration output path</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
+      <item row="3" column="1">
        <widget class="ctkPathLineEdit" name="outputSelector">
         <property name="filters">
          <set>ctkPathLineEdit::AllDirs|ctkPathLineEdit::Dirs|ctkPathLineEdit::Drives|ctkPathLineEdit::NoDot|ctkPathLineEdit::NoDotDot|ctkPathLineEdit::Readable|ctkPathLineEdit::Writable</set>
         </property>
         <property name="options">
          <set>ctkPathLineEdit::ShowDirsOnly</set>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Override default output directory</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QCheckBox" name="overrideOutputDirectoryCheckbox">
+        <property name="text">
+         <string/>
         </property>
        </widget>
       </item>
@@ -122,7 +136,7 @@ p, li { white-space: pre-wrap; }
        <widget class="ctkCheckBox" name="calibrationStripesIncludedCheckbox"/>
       </item>
       <item row="4" column="0">
-       <widget class="QLabel" name="label_2">
+       <widget class="QLabel" name="labelCSD">
         <property name="text">
          <string>Control stripe dose [cGy]</string>
         </property>
@@ -136,7 +150,7 @@ p, li { white-space: pre-wrap; }
        </widget>
       </item>
       <item row="5" column="0">
-       <widget class="QLabel" name="label_5">
+       <widget class="QLabel" name="labelRSD">
         <property name="text">
          <string>Recalibration stripe dose [cGy]</string>
         </property>
@@ -152,12 +166,12 @@ p, li { white-space: pre-wrap; }
       <item row="1" column="0">
        <widget class="QLabel" name="label_9">
         <property name="text">
-         <string>Recalibrate</string>
+         <string>Use film scaling</string>
         </property>
        </widget>
       </item>
       <item row="2" column="0">
-       <widget class="QLabel" name="label_10">
+       <widget class="QLabel" name="lableSizeX">
         <property name="text">
          <string>ROI Size horizontal [mm]</string>
         </property>
@@ -180,7 +194,7 @@ p, li { white-space: pre-wrap; }
        </widget>
       </item>
       <item row="3" column="0">
-       <widget class="QLabel" name="label_3">
+       <widget class="QLabel" name="lableSizeY">
         <property name="text">
          <string>ROI size vertical [mm]</string>
         </property>

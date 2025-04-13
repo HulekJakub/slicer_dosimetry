@@ -109,8 +109,36 @@ class dosimetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.progressBar.visible = False
         self.ui.controlResult.visible = False
         self.ui.recalibrationResult.visible = False
-        self.initializeParameterNode()
 
+        self.ui.calibrationStripesIncludedCheckbox.connect("stateChanged(int)", self.__onCalibrationStripesIncludedCheckboxChange)
+        self.__setFilmScalingVisibility(False)
+        
+        self.ui.overrideOutputDirectoryCheckbox.connect("stateChanged(int)", self.__onOverrideOutputDirectoryCheckboxChange)
+        self.__setOutputDirectoryVisibility(False)
+        
+        # Make sure parameter node is initialized (needed for module reload)
+        self.initializeParameterNode()
+        
+    def __onOverrideOutputDirectoryCheckboxChange(self, value):
+        self.__setOutputDirectoryVisibility(value != 0)
+        
+    def __setOutputDirectoryVisibility(self, isVisible):
+        self.ui.labelOutputDirectory.visible = isVisible
+        self.ui.outputSelector.visible = isVisible
+        
+    def __setFilmScalingVisibility(self, isVisible):
+        self.ui.labelCSD.visible = isVisible
+        self.ui.controlStripeDose.visible = isVisible
+        self.ui.labelRSD.visible = isVisible
+        self.ui.recalibrationStripeDose.visible = isVisible
+        self.ui.lableSizeX.visible = isVisible
+        self.ui.roiSizeHorizontal.visible = isVisible
+        self.ui.lableSizeY.visible = isVisible
+        self.ui.roiSizeVertical.visible = isVisible
+        
+    def __onCalibrationStripesIncludedCheckboxChange(self, value):
+        self.__setFilmScalingVisibility(value != 0)
+        
     @Slot(int)
     def setProgressBar(self, value) -> None:
         self.ui.progressBar.setValue(value)
@@ -207,7 +235,7 @@ class dosimetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         errors = []
         if self.ui.calibrationFileSelector.currentPath == "":
             errors.append("Did not set calibration file!")
-        if self.ui.outputSelector.currentPath == "":
+        if self.ui.overrideOutputDirectoryCheckbox.checked and self.ui.outputSelector.currentPath == "":
             errors.append("Did not set output directory!")
         if "sample" not in self.roi_nodes:
             errors.append("Sample was not detected!")
@@ -248,6 +276,7 @@ class dosimetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 int(x * 100)
             )
             input_volume_node = self.ui.inputImageSelector.currentNode()
+            outputPath = self.ui.outputSelector.currentPath if self.ui.overrideOutputDirectoryCheckbox.checked else os.path.dirname(input_volume_node.GetStorageNode().GetFileName())
 
             control_dose, recalibration_dose = None, None
             if "recalibration" in self.roi_nodes and "control" in self.roi_nodes:
@@ -263,7 +292,7 @@ class dosimetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             ) = self.logic.runDosimetry(
                 input_volume_node,
                 self.ui.calibrationFileSelector.currentPath,
-                self.ui.outputSelector.currentPath,
+                outputPath,
                 self.roi_nodes,
                 advancedSettings,
                 control_dose,
@@ -274,9 +303,11 @@ class dosimetryWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             for node in self.roi_nodes.values():
                 slicer.mrmlScene.RemoveNode(node)
             self.roi_nodes = {}
+            self.stripesDetected = False
+            self._checkCanRun()
 
             saveFileName = os.path.join(
-                self.ui.outputSelector.currentPath, "dosimetry_result.nrrd"
+                outputPath, "dosimetry_result.nrrd"
             )
             saveImg = sitk.GetImageFromArray(calibrated_image)
             saveImg.SetOrigin(input_volume_node.GetOrigin())

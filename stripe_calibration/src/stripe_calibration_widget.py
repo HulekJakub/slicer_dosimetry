@@ -70,8 +70,21 @@ class stripe_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "clicked(bool)", self.onGenerateCalibration
         )
 
+        self.ui.labelOutputDirectory.visible = False
+        self.ui.calibrationOutputSelector.visible = False
+        self.ui.overrideOutputDirectoryCheckbox.connect("stateChanged(int)", self.__onOverrideOutputDirectoryCheckboxChange)
+        
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
+        
+    def __onOverrideOutputDirectoryCheckboxChange(self, value):
+        if value == 0:
+            self.ui.labelOutputDirectory.visible = False
+            self.ui.calibrationOutputSelector.visible = False
+        else:
+            self.ui.labelOutputDirectory.visible = True
+            self.ui.calibrationOutputSelector.visible = True
+
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
@@ -222,23 +235,24 @@ class stripe_calibrationWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.ui.calibrationFileSelector.currentPath == "":
             slicer.util.errorDisplay("Did not set calibration file!")
             return
-        if self.ui.calibrationOutputSelector.currentPath == "":
-            slicer.util.errorDisplay("Did not set calibration output directory!")
+        if self.ui.overrideOutputDirectoryCheckbox.checked and self.ui.calibrationOutputSelector.currentPath == "":
+            slicer.util.errorDisplay("Did not set calibration override output directory!")
             return
         with slicer.util.tryWithErrorDisplay(
             _("Failed to compute results."), waitCursor=True
         ):
             volume_node = self.ui.inputImageSelector.currentNode()
+            outputPath = self.ui.calibrationOutputSelector.currentPath if self.ui.overrideOutputDirectoryCheckbox.checked else os.path.dirname(volume_node.GetStorageNode().GetFileName())
             interpolation_parameters = self.logic.create_calibration(
                 volume_node,
                 self.roi_nodes,
                 self.ui.calibrationFileSelector.currentPath,
-                self.ui.calibrationOutputSelector.currentPath,
+                outputPath,
             )
             logging.info(interpolation_parameters)
 
             plot_path = os.path.join(
-                self.ui.calibrationOutputSelector.currentPath, "calibration_plot.png"
+                outputPath, "calibration_plot.png"
             )
             for node in self.roi_nodes.values():
                 slicer.mrmlScene.RemoveNode(node)
