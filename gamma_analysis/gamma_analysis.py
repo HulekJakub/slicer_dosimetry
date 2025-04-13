@@ -42,7 +42,7 @@ try:
     import pymedphys
 except:
     slicer.util.pip_install("pymedphys==0.37.1")
-    
+
 
 from src.gamma_analysis_logic import *
 from src.gamma_analysis_parameter_node import *

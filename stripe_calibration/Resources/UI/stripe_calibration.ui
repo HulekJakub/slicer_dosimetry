@@ -94,23 +94,6 @@ p, li { white-space: pre-wrap; }
         </property>
        </widget>
       </item>
-      <item row="5" column="0">
-       <widget class="QLabel" name="label_4">
-        <property name="text">
-         <string>Calibration output path</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="1">
-       <widget class="ctkPathLineEdit" name="calibrationOutputSelector">
-        <property name="filters">
-         <set>ctkPathLineEdit::AllDirs|ctkPathLineEdit::Dirs|ctkPathLineEdit::Drives|ctkPathLineEdit::NoDot|ctkPathLineEdit::NoDotDot|ctkPathLineEdit::Readable|ctkPathLineEdit::Writable</set>
-        </property>
-        <property name="options">
-         <set>ctkPathLineEdit::ShowDirsOnly</set>
-        </property>
-       </widget>
-      </item>
       <item row="6" column="0">
        <widget class="QLabel" name="label_2">
         <property name="text">
@@ -166,6 +149,37 @@ p, li { white-space: pre-wrap; }
         </property>
         <property name="quantity">
          <string notr="true"/>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="0">
+       <widget class="QLabel" name="labelOutputDirectory">
+        <property name="text">
+         <string>Calibration output path</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="1">
+       <widget class="ctkPathLineEdit" name="calibrationOutputSelector">
+        <property name="filters">
+         <set>ctkPathLineEdit::AllDirs|ctkPathLineEdit::Dirs|ctkPathLineEdit::Drives|ctkPathLineEdit::NoDot|ctkPathLineEdit::NoDotDot|ctkPathLineEdit::Readable|ctkPathLineEdit::Writable</set>
+        </property>
+        <property name="options">
+         <set>ctkPathLineEdit::ShowDirsOnly</set>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Override default output directory</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="1">
+       <widget class="QCheckBox" name="overrideOutputDirectoryCheckbox">
+        <property name="text">
+         <string/>
         </property>
        </widget>
       </item>
