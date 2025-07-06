@@ -36,7 +36,7 @@ def label_contours(stripes_raw, contours):
 
         valued_contours.append((contour, mean, var))
 
-    valued_contours = sorted(valued_contours, key=lambda x: x[2], reverse=True)
+    valued_contours = sorted(valued_contours, key=lambda x: cv2.contourArea(x[0]), reverse=True)
     result = {"sample": valued_contours[0][0]}
     if len(valued_contours) > 1:
         valued_contours = sorted(valued_contours[1:], key=lambda x: x[1], reverse=True)

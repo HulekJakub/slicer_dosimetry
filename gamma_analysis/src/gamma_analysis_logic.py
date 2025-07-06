@@ -68,13 +68,14 @@ class gamma_analysisLogic(ScriptedLoadableModuleLogic):
         X, Y, Z = rtPlanDicom.BeamSequence[0].ControlPointSequence[0].IsocenterPosition
 
         _, J, _ = self.__getIJKCoordinates1(X, Y, Z, rtDoseVolume)
-
         section = np.copy(rtDose[:, J, :])
         section = section[::-1, :]
 
         moving = sitk.GetImageFromArray(section)
+        moving.SetSpacing((rtDoseVolume.GetSpacing()[0], rtDoseVolume.GetSpacing()[2]))         # fill in your real mm/pixel
         fixed = sitk.GetImageFromArray(dosimetryResult)
-
+        fixed.SetSpacing(dosimetryResultVolume.GetSpacing()[:2])         # fill in your real mm/pixel
+        
         alignedRtDoseImage = self.__affine_registration(fixed, moving)
         alignedRtDose = sitk.GetArrayFromImage(alignedRtDoseImage)
 
